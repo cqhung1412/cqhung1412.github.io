@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chifanlema — Learn Chinese, One Word at a Time</title>
+  <link rel="icon" type="image/png" href="assets/icon-dark.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1A1A1A;
+      background: #FFFFFF;
+      line-height: 1.6;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 0 48px;
+    }
+    .hero .logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 24px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 200;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+    .hero .tagline {
+      font-size: 18px;
+      color: #6B6B6B;
+      margin-bottom: 32px;
+    }
+
+    /* Google Play badge */
+    .play-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #1A1A1A;
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .play-badge:hover { background: #333; }
+    .play-badge svg { flex-shrink: 0; }
+    .play-badge .badge-text {
+      text-align: left;
+      line-height: 1.2;
+    }
+    .play-badge .badge-label {
+      font-size: 11px;
+      font-weight: 400;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .play-badge .badge-store {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Features */
+    .features {
+      padding: 48px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    @media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
+    .feature {
+      padding: 24px;
+      border: 1px solid #F0F0F0;
+      border-radius: 16px;
+    }
+    .feature h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature p {
+      font-size: 14px;
+      color: #6B6B6B;
+    }
+
+    /* About */
+    .about {
+      padding: 48px 0;
+      border-top: 1px solid #F0F0F0;
+    }
+    .about h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .about p {
+      font-size: 15px;
+      color: #6B6B6B;
+      margin-bottom: 12px;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 32px 0;
+      border-top: 1px solid #F0F0F0;
+      text-align: center;
+      font-size: 13px;
+      color: #A0A0A0;
+    }
+    .footer a { color: #6B6B6B; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    .footer .links { margin-bottom: 12px; }
+    .footer .links a { margin: 0 12px; }
+    .footer .contact {
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #6B6B6B;
+    }
+    .footer .contact a { color: #1A1A1A; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <img src="assets/icon-dark.png" alt="Chifanlema logo" class="logo">
+      <h1>吃饭了吗</h1>
+      <p class="tagline">Learn Chinese, one word at a time.</p>
+      <a class="play-badge" href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M3.61 1.814L13.793 12 3.61 22.186a1.005 1.005 0 01-.61-.92V2.734c0-.39.228-.734.61-.92z" fill="#4285F4"/>
+          <path d="M17.091 8.703L5.12.87a1.005 1.005 0 00-1.51.944l10.183 10.183 3.298-3.294z" fill="#EA4335"/>
+          <path d="M3.61 22.186L13.793 12l3.298 3.297L5.12 23.13a1.005 1.005 0 01-1.51-.944z" fill="#34A853"/>
+          <path d="M21.39 12c0 .5-.27.96-.71 1.2l-3.59 2.1-3.297-3.3 3.298-3.297 3.59 2.097c.44.24.71.7.71 1.2z" fill="#FBBC04"/>
+        </svg>
+        <div class="badge-text">
+          <span class="badge-label">Get it on</span><br>
+          <span class="badge-store">Google Play</span>
+        </div>
+      </a>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="feature">
+        <h3>📱 TikTok-Style Feed</h3>
+        <p>Swipe through vocabulary words in a full-screen vertical feed. Learn naturally, one card at a time.</p>
+      </div>
+      <div class="feature">
+        <h3>🔍 AI-Powered Search</h3>
+        <p>Ask questions in English, Vietnamese, or Chinese. Get instant explanations with example sentences.</p>
+      </div>
+      <div class="feature">
+        <h3>✍️ Stroke Order</h3>
+        <p>Interactive stroke order animations for every character. Tap to replay and practice writing.</p>
+      </div>
+      <div class="feature">
+        <h3>🗣️ Native Pronunciation</h3>
+        <p>Auto-play pronunciation as you scroll. Tap any word to hear it spoken in Mandarin Chinese.</p>
+      </div>
+      <div class="feature">
+        <h3>📊 HSK 1–6 Coverage</h3>
+        <p>5,000+ words organized by HSK level. Set your target and get a personalized daily word list.</p>
+      </div>
+      <div class="feature">
+        <h3>🌐 Bilingual</h3>
+        <p>Full English and Vietnamese interface. Definitions available in both languages.</p>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="about">
+      <h2>About Chifanlema</h2>
+      <p>
+        Chifanlema (吃饭了吗 — "Have you eaten?") is a micro-learning app that teaches Mandarin Chinese vocabulary
+        through lock screen widgets and a TikTok-style word feed. Pick your HSK level, set a daily goal, and
+        learn new words every day.
+      </p>
+      <p>
+        The app features AI-powered search, stroke order animations, example sentences with audio from Tatoeba,
+        and shareable word cards for social media. Available in English and Vietnamese.
+      </p>
+      <p>
+        Built by an indie developer in Vietnam. Free to use with optional premium subscription for an ad-free
+        experience and unlimited AI searches.
+      </p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="contact">
+        Support: <a href="mailto:hungcq.chifanlema@gmail.com">hungcq.chifanlema@gmail.com</a>
+      </div>
+      <div class="links">
+        <a href="https://cqhung1412.github.io/chifanlema-legal/privacy-policy.html">Privacy Policy</a>
+        <a href="https://cqhung1412.github.io/chifanlema-legal/terms-of-service.html">Terms of Service</a>
+      </div>
+      <p>&copy; 2025 Chifanlema. All rights reserved.</p>
+    </footer>
+  </div>
+
+</body>
+</html>
