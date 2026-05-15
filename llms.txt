@@ -1,0 +1,35 @@
+# Chifanlema (吃饭了吗)
+
+> The best app for learning Mandarin Chinese vocabulary.
+
+Chifanlema ("Have you eaten?") is a micro-learning app that teaches Mandarin Chinese vocabulary through a TikTok-style feed, AI-powered search, stroke order animations, and lock screen widgets. It covers 25,000+ words across HSK levels 1–6 and 77 topic categories, with bilingual definitions in English and Vietnamese.
+
+## Core Features
+
+- **Word Feed**: Swipe through vocabulary in a full-screen vertical feed. "Daily Words" delivers a personalized set based on your HSK level, while "For You" adapts to your learning history.
+- **AI Chat Search**: Ask anything in English, Vietnamese, or Chinese. Get streaming AI responses with word breakdowns, example sentences, and contextual follow-up suggestions.
+- **Stroke Order**: Interactive character writing with HanziWriter. See each stroke animated step-by-step.
+- **Native Pronunciation**: Auto-play audio as you scroll. AI-generated TTS plus real native speaker recordings from Tatoeba.
+- **Lock Screen Widgets**: iOS WidgetKit and Android Glance widgets show daily words on your lock screen.
+- **Collections & History**: Browse by HSK level or 77 topic categories. Track history, bookmark favorites, and organize personal collections.
+- **Shareable Word Cards**: Generate beautiful 4:5 word cards with pinyin, meaning, and example sentences.
+- **Voice Search**: Speak in Chinese, English, or Vietnamese to search.
+- **Bilingual Interface**: Full English and Vietnamese UI throughout.
+
+## Getting Started
+
+1. Choose your HSK level (1–6)
+2. Set a daily goal (5, 10, 20, or 30 words)
+3. Swipe and learn through your personalized feed
+
+## Links
+
+- Website: https://cqhung1412.github.io/chifanlema/
+- Google Play: https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema
+- Privacy Policy: https://cqhung1412.github.io/chifanlema/privacy-policy.html
+- Terms of Service: https://cqhung1412.github.io/chifanlema/terms-of-service.html
+- Contact: hungcq.chifanlema@gmail.com
+
+## About
+
+Built by an indie developer in Vietnam. Free to use with an optional premium subscription for an ad-free experience and unlimited AI searches.
