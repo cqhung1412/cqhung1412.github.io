@@ -77,7 +77,8 @@
       <li><strong>Email address</strong> — used to create and manage your account.</li>
       <li><strong>User ID</strong> — a unique identifier assigned to your account by our authentication system.</li>
       <li><strong>Learning activity</strong> — which vocabulary words you have seen, your selected HSK level, and daily word goal. This is used to personalize your word feed and avoid showing repeated words.</li>
-      <li><strong>Search queries</strong> — when you use the in-app dictionary search, your query is sent to our server to return results. Search queries are processed in real time and are not stored.</li>
+      <li><strong>Search queries</strong> — when you use the in-app dictionary search, your query is sent to our server to return results. If the query requires AI assistance, it is processed by a third-party AI language model provider to generate explanations and word breakdowns. Search queries are processed in real time and are not stored by the AI provider.</li>
+      <li><strong>Text-to-speech input</strong> — when you use the AI pronunciation feature, the Chinese text is sent to a third-party text-to-speech provider (SiliconFlow) to generate audio. The text is processed in real time; generated audio is cached on our servers to reduce repeated API calls but is not shared further.</li>
       <li><strong>Ad identifiers</strong> — if you use the free (ad-supported) version, Google AdMob may collect your device advertising ID to serve personalized ads. You can opt out of personalized ads in your device settings.</li>
     </ul>
 
@@ -94,6 +95,8 @@
     <ul>
       <li><strong>Google AdMob</strong> — serves ads in the free version. May collect device identifiers and usage data for ad personalization. See <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>.</li>
       <li><strong>RevenueCat</strong> — manages premium subscriptions. Processes purchase receipts and subscription status. See <a href="https://www.revenuecat.com/privacy">RevenueCat's Privacy Policy</a>.</li>
+      <li><strong>AI Language Model Provider</strong> — processes search queries to generate explanations when the local dictionary cannot answer your question. Queries are sent in real time and not stored by the provider.</li>
+      <li><strong>SiliconFlow</strong> — generates AI text-to-speech audio for Chinese pronunciation. Only the Chinese text you request is sent; no personal identifiers are included in the request.</li>
     </ul>
     <p>When you sign in with Google or Apple, those providers may collect data according to their own privacy policies. We only receive your email address and basic profile information from them.</p>
 
