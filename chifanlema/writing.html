@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing Practice — Chifanlema</title>
+  <meta name="description" content="Practice Chinese character stroke order. Shared from the Chifanlema app.">
+  <link rel="icon" type="image/png" href="assets/icon-dark.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: oklch(97% 0.018 70);
+      --surface: oklch(99% 0.008 70);
+      --fg: oklch(22% 0.02 50);
+      --muted: oklch(50% 0.018 50);
+      --border: oklch(90% 0.014 70);
+      --accent: #D4916E;
+      --font-display: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --max-width: 1440px;
+      --cell-size: 200px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-container {
+      margin: 0 auto;
+      padding: 48px 12px 48px 32px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .header .subtitle {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    /* Grid container */
+    .grid-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .grid-container .line-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .grid-container .char-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .grid-container .char-cell .writer-box {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .grid-container .char-cell .writer-box:hover {
+      border-color: var(--accent);
+    }
+
+    /* Crosshair guides within cells */
+    .grid-container .char-cell .writer-box .crosshair-h,
+    .grid-container .char-cell .writer-box .crosshair-v {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .grid-container .char-cell .writer-box .crosshair-h {
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 0;
+      border-top: 1px dashed var(--border);
+      transform: translateY(-50%);
+    }
+
+    .grid-container .char-cell .writer-box .crosshair-v {
+      left: 50%;
+      top: 10%;
+      bottom: 10%;
+      width: 0;
+      border-left: 1px dashed var(--border);
+      transform: translateX(-50%);
+    }
+
+    /* HanziWriter SVG container */
+    .grid-container .char-cell .writer-box .hanzi-writer-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .grid-container .char-cell .writer-box .char-display {
+      font-size: 120px;
+      font-family: 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1;
+    }
+
+    /* Non-CJK plain chars outside writer-box */
+    .grid-container .char-cell > .char-display {
+      font-size: 80px;
+      font-family: 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1;
+    }
+
+    /* Pinyin below the cell */
+    .grid-container .char-cell .pinyin {
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* Edit drawer toggle button */
+    .drawer-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: opacity 0.2s;
+    }
+
+    .drawer-toggle:hover {
+      opacity: 0.85;
+    }
+
+    .drawer-toggle.visible {
+      display: flex;
+    }
+
+    .drawer-toggle svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Drawer overlay */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 1001;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Drawer panel */
+    .drawer-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 360px;
+      max-width: 85vw;
+      background: var(--surface);
+      z-index: 1002;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    }
+
+    .drawer-panel.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .drawer-header h3 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    .drawer-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      transition: background 0.2s;
+    }
+
+    .drawer-close:hover {
+      background: var(--border);
+    }
+
+    .drawer-close svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .drawer-body {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .drawer-body textarea {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--fg);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .drawer-body textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .drawer-body .char-count {
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      display: none;
+    }
+
+    .empty-state.visible {
+      display: block;
+    }
+
+    .empty-state h2 {
+      font-family: var(--font-display);
+      font-size: clamp(22px, 4vw, 30px);
+      font-weight: 400;
+      margin-bottom: 16px;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 400px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+    }
+
+    /* CTA section */
+    .cta-section {
+      text-align: center;
+      padding: 32px 20px;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    .cta-section p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .cta-btn:hover {
+      opacity: 0.85;
+      text-decoration: none;
+    }
+
+    /* CDN error state */
+    .cdn-error {
+      text-align: center;
+      padding: 20px;
+      background: oklch(95% 0.02 30);
+      border-radius: 8px;
+      margin-bottom: 24px;
+      display: none;
+    }
+
+    .cdn-error.visible {
+      display: block;
+    }
+
+    .cdn-error p {
+      font-size: 14px;
+      color: oklch(40% 0.05 30);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer a {
+      color: var(--fg);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 767px) {
+      .page-container {
+        padding: 32px 16px;
+      }
+
+      :root {
+        --cell-size: 140px;
+      }
+
+      .grid-container .char-cell .writer-box .char-display {
+        font-size: 80px;
+      }
+
+      .grid-container .char-cell .pinyin {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      :root {
+        --cell-size: 120px;
+      }
+
+      .grid-container .char-cell .writer-box .char-display {
+        font-size: 68px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <header class="header">
+      <h1>Writing Practice</h1>
+      <p class="subtitle">Chinese character stroke order practice — shared from Chifanlema</p>
+    </header>
+
+    <div class="cdn-error" id="cdn-error">
+      <p>Some features are unavailable. Character animations may not load correctly.</p>
+    </div>
+
+    <section class="grid-container" id="grid-container"></section>
+
+    <section class="empty-state" id="empty-state">
+      <h2>Practice Chinese Writing</h2>
+      <p>This page displays shared Chinese character stroke order practice. Download the Chifanlema app to create and share your own practice content.</p>
+      <a class="cta-btn" href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema" target="_blank" rel="noopener noreferrer">Download on Google Play</a>
+    </section>
+
+    <section class="cta-section" id="cta-section">
+      <p>Want to create your own practice content?</p>
+      <a class="cta-btn" href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema" target="_blank" rel="noopener noreferrer">Get Chifanlema on Google Play</a>
+    </section>
+
+    <div class="footer">
+      <a href="./">← Back</a> · <a href="privacy-policy.html">Privacy Policy</a>
+    </div>
+  </div>
+
+  <!-- Drawer toggle button (only visible when content param exists) -->
+  <button class="drawer-toggle" id="drawer-toggle" aria-label="Edit content">
+    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  </button>
+
+  <!-- Drawer overlay -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+
+  <!-- Drawer panel -->
+  <div class="drawer-panel" id="drawer-panel">
+    <div class="drawer-header">
+      <h3>Edit Content</h3>
+      <button class="drawer-close" id="drawer-close" aria-label="Close editor">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <textarea id="content-editor" maxlength="500" placeholder="Enter Chinese text to practice..."></textarea>
+      <div class="char-count"><span id="char-count">0</span>/500</div>
+    </div>
+  </div>
+
+  <!-- CDN Dependencies (pinned versions) -->
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5.0/dist/hanzi-writer.min.js" id="hanzi-writer-script"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.28.1/dist/index.js" id="pinyin-pro-script"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // --- CDN load tracking ---
+      var hanziWriterLoaded = typeof HanziWriter !== 'undefined';
+      var pinyinProLoaded = typeof pinyinPro !== 'undefined';
+
+      var hanziScript = document.getElementById('hanzi-writer-script');
+      var pinyinScript = document.getElementById('pinyin-pro-script');
+
+      if (hanziScript) {
+        hanziScript.onerror = function () {
+          hanziWriterLoaded = false;
+          hanziWriterReady = false;
+          hanziWriterTimedOut = true;
+          showCdnError();
+        };
+      }
+      if (pinyinScript) {
+        pinyinScript.onerror = function () {
+          pinyinProLoaded = false;
+        };
+      }
+
+      function showCdnError() {
+        var el = document.getElementById('cdn-error');
+        if (el) el.classList.add('visible');
+      }
+
+      // --- Content decoding ---
+      var contentLines = [];
+
+      function decodeContent() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var raw = params.get('content');
+          if (!raw || raw.trim().length === 0) {
+            return [];
+          }
+          var decoded = decodeURIComponent(raw);
+          return decoded.split('\n');
+        } catch (e) {
+          return [];
+        }
+      }
+
+      contentLines = decodeContent();
+
+      // --- DOM references ---
+      var gridContainer = document.getElementById('grid-container');
+      var emptyState = document.getElementById('empty-state');
+      var ctaSection = document.getElementById('cta-section');
+      var contentEditor = document.getElementById('content-editor');
+      var charCountEl = document.getElementById('char-count');
+      var drawerToggle = document.getElementById('drawer-toggle');
+      var drawerOverlay = document.getElementById('drawer-overlay');
+      var drawerPanel = document.getElementById('drawer-panel');
+      var drawerClose = document.getElementById('drawer-close');
+
+      // --- Drawer logic (only shown when content query param exists) ---
+      var hasContentParam = (function () {
+        var params = new URLSearchParams(window.location.search);
+        return params.has('content') && params.get('content').trim().length > 0;
+      })();
+
+      if (hasContentParam) {
+        drawerToggle.classList.add('visible');
+      }
+
+      function openDrawer() {
+        drawerPanel.classList.add('open');
+        drawerOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeDrawer() {
+        drawerPanel.classList.remove('open');
+        drawerOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      drawerToggle.addEventListener('click', openDrawer);
+      drawerOverlay.addEventListener('click', closeDrawer);
+      drawerClose.addEventListener('click', closeDrawer);
+
+      // --- State rendering ---
+      function hasContent() {
+        return contentLines.length > 0 && contentLines.some(function (line) {
+          return line.trim().length > 0;
+        });
+      }
+
+      function renderState() {
+        if (hasContent()) {
+          emptyState.classList.remove('visible');
+          gridContainer.style.display = '';
+          ctaSection.style.display = '';
+          renderGrid();
+        } else {
+          emptyState.classList.add('visible');
+          gridContainer.style.display = 'none';
+          ctaSection.style.display = 'none';
+        }
+      }
+
+      function updateEditor() {
+        var text = contentLines.join('\n');
+        contentEditor.value = text;
+        charCountEl.textContent = text.length;
+      }
+
+      // --- CJK detection helper ---
+      function isCJK(char) {
+        var code = char.charCodeAt(0);
+        return code >= 0x4E00 && code <= 0x9FFF;
+      }
+
+      // --- Pinyin resolution per line ---
+      function resolvePinyinForLine(line) {
+        if (!pinyinProLoaded || typeof pinyinPro === 'undefined') {
+          return null;
+        }
+        try {
+          var result = pinyinPro.pinyin(line, { toneType: 'symbol', type: 'array' });
+          return result;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // --- Grid rendering with HanziWriter stroke animations ---
+      var HANZI_WRITER_TIMEOUT = 10000;
+      var hanziWriterReady = typeof HanziWriter !== 'undefined';
+      var hanziWriterTimedOut = false;
+
+      (function initHanziWriterCheck() {
+        if (hanziWriterReady) return;
+
+        var timeout = setTimeout(function () {
+          if (!hanziWriterReady) {
+            hanziWriterTimedOut = true;
+            showCdnError();
+            if (hasContent()) renderGrid();
+          }
+        }, HANZI_WRITER_TIMEOUT);
+
+        var script = document.getElementById('hanzi-writer-script');
+        if (script) {
+          script.addEventListener('load', function () {
+            clearTimeout(timeout);
+            hanziWriterReady = true;
+            if (hasContent()) renderGrid();
+          });
+        }
+      })();
+
+      function renderGrid() {
+        gridContainer.innerHTML = '';
+
+        var pinyinByLine = contentLines.map(function (line) {
+          return resolvePinyinForLine(line);
+        });
+
+        contentLines.forEach(function (line, lineIndex) {
+          var linePinyin = pinyinByLine[lineIndex];
+
+          // Each line gets its own row
+          var lineRow = document.createElement('div');
+          lineRow.className = 'line-row';
+
+          for (var i = 0; i < line.length; i++) {
+            var char = line[i];
+            // Skip whitespace only
+            if (char.trim().length === 0) continue;
+
+            // Non-CJK characters: render as plain text, auto-sized
+            if (!isCJK(char)) {
+              var plainCell = document.createElement('div');
+              plainCell.className = 'char-cell';
+              plainCell.style.width = 'auto';
+              var plainChar = document.createElement('span');
+              plainChar.className = 'char-display';
+              plainChar.style.height = 'var(--cell-size)';
+              plainChar.style.display = 'flex';
+              plainChar.style.alignItems = 'center';
+              plainChar.textContent = char;
+              plainCell.appendChild(plainChar);
+              var emptySpacer = document.createElement('span');
+              emptySpacer.className = 'pinyin';
+              emptySpacer.innerHTML = '&nbsp;';
+              plainCell.appendChild(emptySpacer);
+              lineRow.appendChild(plainCell);
+              continue;
+            }
+
+            var cell = document.createElement('div');
+            cell.className = 'char-cell';
+
+            // Writer box (contains crosshairs + character)
+            var writerBox = document.createElement('div');
+            writerBox.className = 'writer-box';
+
+            var crosshairH = document.createElement('div');
+            crosshairH.className = 'crosshair-h';
+            writerBox.appendChild(crosshairH);
+
+            var crosshairV = document.createElement('div');
+            crosshairV.className = 'crosshair-v';
+            writerBox.appendChild(crosshairV);
+
+            // Render character with HanziWriter — looping animation
+            if (hanziWriterReady && !hanziWriterTimedOut) {
+              var writerContainer = document.createElement('div');
+              writerContainer.className = 'hanzi-writer-container';
+              writerBox.appendChild(writerContainer);
+
+              (function (container, character, cellEl) {
+                try {
+                  var writer = HanziWriter.create(container, character, {
+                    width: 180,
+                    height: 180,
+                    padding: 5,
+                    showCharacter: false,
+                    showOutline: true,
+                    strokeAnimationSpeed: 1,
+                    delayBetweenStrokes: 200,
+                    delayBetweenLoops: 1500,
+                    charDataLoader: function (ch, onComplete) {
+                      var url = 'https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + ch + '.json';
+                      fetch(url)
+                        .then(function (res) {
+                          if (!res.ok) throw new Error('Not found');
+                          return res.json();
+                        })
+                        .then(function (data) {
+                          onComplete(data);
+                        })
+                        .catch(function () {
+                          container.style.display = 'none';
+                          var fallback = document.createElement('span');
+                          fallback.className = 'char-display';
+                          fallback.textContent = character;
+                          cellEl.querySelector('.writer-box').appendChild(fallback);
+                        });
+                    }
+                  });
+
+                  // Loop animation continuously using built-in API
+                  writer.loopCharacterAnimation();
+                } catch (e) {
+                  container.style.display = 'none';
+                  var fallback = document.createElement('span');
+                  fallback.className = 'char-display';
+                  fallback.textContent = character;
+                  cellEl.querySelector('.writer-box').appendChild(fallback);
+                }
+              })(writerContainer, char, cell);
+            } else {
+              // HanziWriter not available — plain text fallback
+              var charEl = document.createElement('span');
+              charEl.className = 'char-display';
+              charEl.textContent = char;
+              writerBox.appendChild(charEl);
+            }
+
+            cell.appendChild(writerBox);
+
+            // Pinyin below the writer box
+            var pinyinEl = document.createElement('span');
+            pinyinEl.className = 'pinyin';
+            if (isCJK(char) && linePinyin && linePinyin[i]) {
+              pinyinEl.textContent = linePinyin[i];
+            }
+            cell.appendChild(pinyinEl);
+
+            lineRow.appendChild(cell);
+          }
+
+          gridContainer.appendChild(lineRow);
+        });
+      }
+
+      // --- Textarea sync with debounced grid re-render ---
+      var debounceTimer = null;
+
+      function updateUrlFromContent() {
+        var text = contentLines.join('\n');
+        var url;
+        if (text.trim().length === 0) {
+          url = window.location.pathname;
+        } else {
+          var encoded = encodeURIComponent(text);
+          url = window.location.pathname + '?content=' + encoded;
+        }
+        window.history.replaceState(null, '', url);
+      }
+
+      function onEditorInput() {
+        var text = contentEditor.value;
+        charCountEl.textContent = text.length;
+
+        if (debounceTimer !== null) {
+          clearTimeout(debounceTimer);
+        }
+
+        debounceTimer = setTimeout(function () {
+          debounceTimer = null;
+
+          if (text.trim().length === 0) {
+            contentLines = [];
+          } else {
+            contentLines = text.split('\n');
+          }
+
+          updateUrlFromContent();
+          renderState();
+        }, 500);
+      }
+
+      contentEditor.addEventListener('input', onEditorInput);
+
+      // --- Initialize ---
+      updateEditor();
+      renderState();
+    })();
+  </script>
+</body>
+</html>
