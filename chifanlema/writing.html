@@ -20,7 +20,7 @@
       --font-display: 'Newsreader', 'Iowan Old Style', Georgia, serif;
       --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --max-width: 1440px;
-      --cell-size: 200px;
+      --cell-size: clamp(80px, 18vw, 200px);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -133,14 +133,14 @@
     }
 
     .grid-container .char-cell .writer-box .char-display {
-      font-size: 120px;
+      font-size: calc(var(--cell-size) * 0.6);
       font-family: 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
       line-height: 1;
     }
 
     /* Non-CJK plain chars outside writer-box */
     .grid-container .char-cell > .char-display {
-      font-size: 80px;
+      font-size: calc(var(--cell-size) * 0.4);
       font-family: 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
       line-height: 1;
     }
@@ -402,29 +402,11 @@
     /* Responsive */
     @media (max-width: 767px) {
       .page-container {
-        padding: 32px 16px;
-      }
-
-      :root {
-        --cell-size: 140px;
-      }
-
-      .grid-container .char-cell .writer-box .char-display {
-        font-size: 80px;
+        padding: 32px 12px 32px 16px;
       }
 
       .grid-container .char-cell .pinyin {
-        font-size: 12px;
-      }
-    }
-
-    @media (max-width: 400px) {
-      :root {
-        --cell-size: 120px;
-      }
-
-      .grid-container .char-cell .writer-box .char-display {
-        font-size: 68px;
+        font-size: 11px;
       }
     }
   </style>
@@ -597,6 +579,18 @@
       }
 
       // --- CJK detection helper ---
+      function getWriterSize() {
+        // Measure actual computed cell size by reading a real element
+        var measure = document.createElement('div');
+        measure.style.cssText = 'width:var(--cell-size);height:0;position:absolute;visibility:hidden;';
+        document.documentElement.appendChild(measure);
+        var size = measure.getBoundingClientRect().width;
+        document.documentElement.removeChild(measure);
+        if (!size || size < 50) size = 200;
+        return Math.round(size - 10);
+      }
+
+      // --- CJK detection helper ---
       function isCJK(char) {
         var code = char.charCodeAt(0);
         return code >= 0x4E00 && code <= 0x9FFF;
@@ -703,9 +697,10 @@
 
               (function (container, character, cellEl) {
                 try {
+                  var writerSize = getWriterSize();
                   var writer = HanziWriter.create(container, character, {
-                    width: 180,
-                    height: 180,
+                    width: writerSize,
+                    height: writerSize,
                     padding: 5,
                     showCharacter: false,
                     showOutline: true,
