@@ -1,0 +1,32 @@
+# Robots.txt for cqhung1412.github.io
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://cqhung1412.github.io/sitemap.xml
+
+# AI Crawlers — allow on-demand fetches for citation
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
