@@ -153,6 +153,18 @@
       white-space: nowrap;
     }
 
+    /* New-line indicator (↵) */
+    .grid-container .line-row .newline-indicator {
+      display: flex;
+      align-items: center;
+      height: var(--cell-size);
+      font-size: calc(var(--cell-size) * 0.25);
+      color: var(--muted);
+      opacity: 0.5;
+      padding-left: 4px;
+      user-select: none;
+    }
+
     /* Edit drawer toggle button */
     .drawer-toggle {
       position: fixed;
@@ -578,17 +590,23 @@
         charCountEl.textContent = text.length;
       }
 
-      // --- CJK detection helper ---
+      // --- Cell size measurement (computed ONCE, cached) --- [C2 fix]
+      var cachedWriterSize = null;
+
       function getWriterSize() {
-        // Measure actual computed cell size by reading a real element
+        if (cachedWriterSize !== null) return cachedWriterSize;
         var measure = document.createElement('div');
         measure.style.cssText = 'width:var(--cell-size);height:0;position:absolute;visibility:hidden;';
         document.documentElement.appendChild(measure);
         var size = measure.getBoundingClientRect().width;
         document.documentElement.removeChild(measure);
         if (!size || size < 50) size = 200;
-        return Math.round(size - 10);
+        cachedWriterSize = Math.round(size - 10);
+        return cachedWriterSize;
       }
+
+      // Invalidate cache on resize so responsive --cell-size is respected
+      window.addEventListener('resize', function () { cachedWriterSize = null; });
 
       // --- CJK detection helper ---
       function isCJK(char) {
@@ -609,7 +627,13 @@
         }
       }
 
-      // --- Grid rendering with HanziWriter stroke animations ---
+      // --- Character data cache (deduplicates CDN fetches) --- [M1 fix]
+      var charDataCache = {};
+
+      // --- Active HanziWriter instances tracking --- [H2 fix]
+      var activeWriters = [];
+
+      // --- Grid rendering with HanziWriter (animate on click, not auto-loop) ---
       var HANZI_WRITER_TIMEOUT = 10000;
       var hanziWriterReady = typeof HanziWriter !== 'undefined';
       var hanziWriterTimedOut = false;
@@ -636,7 +660,17 @@
       })();
 
       function renderGrid() {
+        // [H2 fix] Cancel all active animations before destroying DOM
+        activeWriters.forEach(function (w) {
+          try { w.cancelQuiz(); } catch (e) { /* no-op */ }
+          try { w.hideCharacter(); } catch (e) { /* no-op */ }
+        });
+        activeWriters = [];
+
         gridContainer.innerHTML = '';
+
+        // [C2 fix] Compute writer size ONCE before the loop
+        var writerSize = getWriterSize();
 
         var pinyinByLine = contentLines.map(function (line) {
           return resolvePinyinForLine(line);
@@ -689,25 +723,28 @@
             crosshairV.className = 'crosshair-v';
             writerBox.appendChild(crosshairV);
 
-            // Render character with HanziWriter — looping animation
+            // Render character with HanziWriter — static outline, animate on click [C1 fix]
             if (hanziWriterReady && !hanziWriterTimedOut) {
               var writerContainer = document.createElement('div');
               writerContainer.className = 'hanzi-writer-container';
               writerBox.appendChild(writerContainer);
 
-              (function (container, character, cellEl) {
+              (function (container, character, box, size) {
                 try {
-                  var writerSize = getWriterSize();
                   var writer = HanziWriter.create(container, character, {
-                    width: writerSize,
-                    height: writerSize,
+                    width: size,
+                    height: size,
                     padding: 5,
-                    showCharacter: false,
+                    showCharacter: true,
                     showOutline: true,
                     strokeAnimationSpeed: 1,
                     delayBetweenStrokes: 200,
-                    delayBetweenLoops: 1500,
                     charDataLoader: function (ch, onComplete) {
+                      // [M1 fix] Use cached data if available
+                      if (charDataCache[ch]) {
+                        onComplete(charDataCache[ch]);
+                        return;
+                      }
                       var url = 'https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/' + ch + '.json';
                       fetch(url)
                         .then(function (res) {
@@ -715,6 +752,7 @@
                           return res.json();
                         })
                         .then(function (data) {
+                          charDataCache[ch] = data;
                           onComplete(data);
                         })
                         .catch(function () {
@@ -722,21 +760,31 @@
                           var fallback = document.createElement('span');
                           fallback.className = 'char-display';
                           fallback.textContent = character;
-                          cellEl.querySelector('.writer-box').appendChild(fallback);
+                          box.appendChild(fallback);
                         });
                     }
                   });
 
-                  // Loop animation continuously using built-in API
-                  writer.loopCharacterAnimation();
+                  // [H2 fix] Track instance for cleanup
+                  activeWriters.push(writer);
+
+                  // [C1 fix] Static by default — animate stroke order on click only
+                  box.addEventListener('click', function () {
+                    writer.hideCharacter();
+                    writer.animateCharacter({
+                      onComplete: function () {
+                        writer.showCharacter();
+                      }
+                    });
+                  });
                 } catch (e) {
                   container.style.display = 'none';
                   var fallback = document.createElement('span');
                   fallback.className = 'char-display';
                   fallback.textContent = character;
-                  cellEl.querySelector('.writer-box').appendChild(fallback);
+                  box.appendChild(fallback);
                 }
-              })(writerContainer, char, cell);
+              })(writerContainer, char, writerBox, writerSize);
             } else {
               // HanziWriter not available — plain text fallback
               var charEl = document.createElement('span');
@@ -760,6 +808,15 @@
 
           gridContainer.appendChild(lineRow);
         });
+
+        // Add ↵ new-line indicators after each row except the last
+        var rows = gridContainer.querySelectorAll('.line-row');
+        for (var r = 0; r < rows.length - 1; r++) {
+          var indicator = document.createElement('span');
+          indicator.className = 'newline-indicator';
+          indicator.textContent = '↵';
+          rows[r].appendChild(indicator);
+        }
       }
 
       // --- Textarea sync with debounced grid re-render ---
