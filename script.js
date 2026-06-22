@@ -437,3 +437,134 @@ window.addEventListener('load', () => {
   // Start name cycling after initial reveal
   setTimeout(startNameAnimation, 2500);
 });
+
+// ============================================
+// WEBMCP TOOLS - Agent interaction via browser
+// ============================================
+(function initWebMCP() {
+  if (typeof navigator === 'undefined' || !navigator.modelContext) return;
+
+  const mc = navigator.modelContext;
+
+  // Tool 1: get_contact_info
+  mc.registerTool({
+    name: 'get_contact_info',
+    description: 'Returns structured contact information for Chiêm Quốc Hùng',
+    schema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    handler: async () => ({
+      email: 'cqhung1412@gmail.com',
+      linkedin: 'https://www.linkedin.com/in/cqhung1412/',
+      github: 'https://github.com/cqhung1412'
+    })
+  });
+
+  // Tool 2: get_skills
+  mc.registerTool({
+    name: 'get_skills',
+    description: 'Returns skills and expertise organized by category',
+    schema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    handler: async () => {
+      const cards = document.querySelectorAll('.skill-card');
+      const skills = [];
+      cards.forEach(card => {
+        const title = card.querySelector('h3');
+        const desc = card.querySelector('p');
+        if (title && desc) {
+          skills.push({
+            category: title.textContent.trim(),
+            skills: desc.textContent.trim()
+          });
+        }
+      });
+      return { skills };
+    }
+  });
+
+  // Tool 3: get_experience
+  mc.registerTool({
+    name: 'get_experience',
+    description: 'Returns structured work experience data',
+    schema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    handler: async () => {
+      const cards = document.querySelectorAll('.exp-card');
+      const experience = [];
+      cards.forEach(card => {
+        const date = card.querySelector('.exp-date');
+        const company = card.querySelector('.exp-company');
+        const role = card.querySelector('.exp-right h3');
+        const desc = card.querySelector('.exp-right p');
+        if (company && role) {
+          experience.push({
+            company: company.textContent.trim(),
+            role: role.textContent.trim(),
+            dates: date ? date.textContent.trim() : '',
+            description: desc ? desc.textContent.trim() : ''
+          });
+        }
+      });
+      return { experience };
+    }
+  });
+
+  // Tool 4: get_cv_link
+  mc.registerTool({
+    name: 'get_cv_link',
+    description: 'Returns the URL to the downloadable CV PDF',
+    schema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    handler: async () => ({
+      url: 'https://cqhung1412.github.io/cv/Chiem-Quoc-Hung-CV.pdf'
+    })
+  });
+
+  // Tool 5: navigate_to_section
+  mc.registerTool({
+    name: 'navigate_to_section',
+    description: 'Scrolls the viewport to a specified section of the page',
+    schema: {
+      type: 'object',
+      properties: {
+        section: {
+          type: 'string',
+          description: 'Section name: About, Skills, Experience, Projects, or Contact',
+          enum: ['About', 'Skills', 'Experience', 'Projects', 'Contact']
+        }
+      },
+      required: ['section']
+    },
+    handler: async ({ section }) => {
+      const sectionMap = {
+        'About': 'about',
+        'Skills': 'skills',
+        'Experience': 'experience',
+        'Projects': 'projects',
+        'Contact': 'contact'
+      };
+      const id = sectionMap[section];
+      if (!id) {
+        return { success: false, error: `Unknown section: ${section}` };
+      }
+      const el = document.getElementById(id);
+      if (!el) {
+        return { success: false, error: `Section element not found: ${id}` };
+      }
+      el.scrollIntoView({ behavior: 'smooth' });
+      return { success: true, section: section };
+    }
+  });
+})();
