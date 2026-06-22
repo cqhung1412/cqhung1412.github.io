@@ -1,0 +1,9 @@
+{
+  "serverInfo": {
+    "name": "chifanlema",
+    "version": "0.1.0",
+    "description": "Chifanlema — Chinese vocabulary learning app. No public MCP server is currently available."
+  },
+  "capabilities": {},
+  "transport": null
+}

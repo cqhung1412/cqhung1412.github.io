@@ -1,0 +1,13 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://cqhung1412.github.io/chifanlema/",
+      "service-doc": [
+        {
+          "href": "https://cqhung1412.github.io/chifanlema/llms.txt",
+          "type": "text/plain"
+        }
+      ]
+    }
+  ]
+}
