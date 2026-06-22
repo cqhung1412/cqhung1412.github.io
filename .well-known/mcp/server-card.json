@@ -1,0 +1,32 @@
+{
+  "serverInfo": {
+    "name": "cqhung1412-portfolio",
+    "version": "1.0.0",
+    "description": "Chiêm Quốc Hùng's portfolio — exposes structured data and navigation tools via WebMCP (browser-side only)."
+  },
+  "capabilities": {
+    "tools": [
+      {
+        "name": "get_contact_info",
+        "description": "Returns structured contact information (email, LinkedIn, GitHub URLs)"
+      },
+      {
+        "name": "get_skills",
+        "description": "Returns skills and expertise organized by category"
+      },
+      {
+        "name": "get_experience",
+        "description": "Returns structured work experience (company, role, dates, description)"
+      },
+      {
+        "name": "get_cv_link",
+        "description": "Returns the URL to the downloadable CV PDF"
+      },
+      {
+        "name": "navigate_to_section",
+        "description": "Scrolls the viewport to a named section (About, Skills, Experience, Projects, Contact)"
+      }
+    ]
+  },
+  "transport": "webmcp"
+}

@@ -30,3 +30,6 @@ Allow: /
 
 User-agent: OAI-SearchBot
 Allow: /
+
+# Content Signals (draft-romm-aipref-contentsignals)
+Content-Signal: ai-train=no, search=yes, ai-input=yes

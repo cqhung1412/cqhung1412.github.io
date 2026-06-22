@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "portfolio-contact",
+      "type": "data-extraction",
+      "description": "Retrieve Chiêm Quốc Hùng's contact information (email, LinkedIn, GitHub)",
+      "url": "https://cqhung1412.github.io/llms.txt",
+      "digest": "sha256:18e4966af62f25c0a0f50f7b9860032721ae1babc909d71d7fd98db6d8acf361"
+    },
+    {
+      "name": "portfolio-skills",
+      "type": "data-extraction",
+      "description": "Retrieve skills and expertise by category (AI/ML, Cloud, Backend, etc.)",
+      "url": "https://cqhung1412.github.io/llms.txt",
+      "digest": "sha256:18e4966af62f25c0a0f50f7b9860032721ae1babc909d71d7fd98db6d8acf361"
+    },
+    {
+      "name": "portfolio-experience",
+      "type": "data-extraction",
+      "description": "Retrieve work experience history with roles, companies, and descriptions",
+      "url": "https://cqhung1412.github.io/llms.txt",
+      "digest": "sha256:18e4966af62f25c0a0f50f7b9860032721ae1babc909d71d7fd98db6d8acf361"
+    },
+    {
+      "name": "portfolio-navigation",
+      "type": "interaction",
+      "description": "Navigate the portfolio page to specific sections (About, Skills, Experience, Projects, Contact)",
+      "url": "https://cqhung1412.github.io/llms.txt",
+      "digest": "sha256:18e4966af62f25c0a0f50f7b9860032721ae1babc909d71d7fd98db6d8acf361"
+    },
+    {
+      "name": "chifanlema-app-info",
+      "type": "documentation",
+      "description": "Chifanlema Chinese vocabulary learning app — product information, features, and LLM-friendly documentation",
+      "url": "https://cqhung1412.github.io/chifanlema/llms.txt",
+      "digest": "sha256:478ad24b43011a24267cb85c964b5e3a5b664062b7118ecad275d3ecb90c71cb"
+    }
+  ]
+}
