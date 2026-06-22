@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agentskills.io/schema/index.json",
+  "skills": [
+    {
+      "name": "chifanlema-app-info",
+      "type": "documentation",
+      "description": "Chifanlema Chinese vocabulary learning app — product information, features, and LLM-friendly documentation",
+      "url": "https://cqhung1412.github.io/chifanlema/llms.txt"
+    }
+  ]
+}

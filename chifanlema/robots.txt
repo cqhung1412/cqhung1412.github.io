@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Content Signals (draft-romm-aipref-contentsignals)
+# Preferences for AI content usage
+Content-Signal: ai-train=no, search=yes, ai-input=yes
