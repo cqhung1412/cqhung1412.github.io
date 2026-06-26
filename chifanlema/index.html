@@ -1,341 +1,1108 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chifanlema — Learn Chinese, One Word at a Time</title>
   <link rel="icon" type="image/png" href="assets/icon-dark.png">
-  <!-- Agent discovery (RFC 8288 HTML equivalent) -->
-  <link rel="api-catalog" href=".well-known/api-catalog">
-  <link rel="service-doc" href="llms.txt" type="text/plain">
-  <link rel="alternate" type="text/markdown" href="llms.txt" title="LLM-friendly documentation">
-  <meta name="description"
-    content="Learn Mandarin Chinese vocabulary through a TikTok-style feed, AI-powered search, stroke order animations, and lock screen widgets. 25,000+ words covering HSK 1-6.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&display=swap"
-    rel="stylesheet">
+  <meta name="description" content="Learn Mandarin Chinese vocabulary through a TikTok-style feed, AI chat, stroke order animations, grammar detection, and more. 40,000+ words covering HSK 1-9.">
   <style>
     :root {
-      --bg: oklch(97% 0.018 70);
-      --surface: oklch(99% 0.008 70);
-      --fg: oklch(22% 0.02 50);
-      --muted: oklch(50% 0.018 50);
-      --border: oklch(90% 0.014 70);
-      --accent: #D4916E;
-      --font-display: 'Newsreader', 'Iowan Old Style', Georgia, serif;
-      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --bg: oklch(99% 0.002 240);
+      --surface: oklch(100% 0 0);
+      --fg: oklch(18% 0.012 250);
+      --muted: oklch(46% 0.012 250);
+      --border: oklch(92% 0.005 250);
+      --accent: oklch(68% 0.11 45);
+      --accent-hex: #D4916E;
+      --hero-bg: oklch(10% 0.008 250);
+      --hero-fg: oklch(96% 0.005 250);
+      --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
     }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: var(--font-body);
       color: var(--fg);
       background: var(--bg);
-      line-height: 1.65;
+      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0 24px;
+    /* ===== SKIP LINK + SR-ONLY ===== */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 16px;
+      z-index: 99999;
+      padding: 8px 16px;
+      background: var(--fg);
+      color: #fff;
+      font-size: 14px;
+      border-radius: 4px;
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
     }
 
-    /* Hero — editorial: generous vertical space, serif headline, restrained hierarchy */
-    .hero {
-      padding: 100px 0 72px;
-      text-align: center;
-    }
-
-    .hero .logo {
-      width: 80px;
-      height: 80px;
+    /* ===== LANG TOGGLE ===== */
+    .lang-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      background: rgba(10, 14, 26, 0.85);
+      backdrop-filter: blur(10px);
       border-radius: 20px;
-      margin-bottom: 32px;
+      padding: 3px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .lang-toggle button {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 17px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      transition: all 0.2s;
+    }
+    .lang-toggle button:hover { color: rgba(255,255,255,0.8); }
+    .lang-toggle button.active {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
     }
 
-    .hero h1 {
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--hero-bg);
+      color: var(--hero-fg);
+      position: relative;
+      overflow: hidden;
+      padding: 80px 24px;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 50% 40% at 50% 45%, oklch(18% 0.03 45 / 0.2), transparent);
+      pointer-events: none;
+    }
+
+    .hero-chars {
+      display: flex;
+      gap: 0.02em;
+      font-size: clamp(48px, 10vw, 100px);
+      font-weight: 300;
+      letter-spacing: -0.03em;
       font-family: var(--font-display);
-      font-size: clamp(48px, 8vw, 64px);
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-char {
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+      animation: charIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .hero-char:nth-child(1) { animation-delay: 0.3s; }
+    .hero-char:nth-child(2) { animation-delay: 0.5s; }
+    .hero-char:nth-child(3) { animation-delay: 0.7s; }
+    .hero-char:nth-child(4) { animation-delay: 0.9s; }
+    @keyframes charIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .hero-tagline {
+      font-size: clamp(18px, 3vw, 24px);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: oklch(70% 0.01 250);
+      margin-bottom: 12px;
+      opacity: 0;
+      animation: fadeUp 0.8s 1.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative; z-index: 1;
+    }
+    .hero-sub {
+      font-size: 15px;
+      color: oklch(62% 0.01 250);
+      max-width: 440px;
+      text-align: center;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 0.8s 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative; z-index: 1;
+    }
+    .hero-cta {
+      margin-top: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--accent-hex);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      opacity: 0;
+      animation: fadeUp 0.8s 1.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative; z-index: 1;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px oklch(68% 0.11 45 / 0.3);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Floating background chars */
+    .hero-bg-chars {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .hero-bg-chars span {
+      position: absolute;
+      font-size: clamp(40px, 8vw, 80px);
+      opacity: 0.04;
+      color: var(--hero-fg);
+      animation: floatChar 20s linear infinite;
+    }
+    @keyframes floatChar {
+      0% { transform: translateY(100vh) rotate(0deg); }
+      100% { transform: translateY(-100px) rotate(15deg); }
+    }
+
+    /* ===== TICKER ===== */
+    .ticker-section {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: tickerScroll 25s linear infinite;
+    }
+    .ticker-track:hover { animation-play-state: paused; }
+    .ticker-item {
+      padding: 0 28px;
+      font-size: 26px;
       font-weight: 300;
       letter-spacing: -0.02em;
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
-
-    .hero .tagline {
-      font-family: var(--font-display);
-      font-size: 22px;
-      font-weight: 400;
-      font-style: italic;
+      white-space: nowrap;
       color: var(--muted);
-      margin-bottom: 20px;
+      font-family: var(--font-display);
+    }
+    .ticker-item .pinyin {
+      font-size: 11px;
+      letter-spacing: 0.02em;
+      display: block;
+      color: oklch(65% 0.01 250);
+      font-weight: 400;
+    }
+    @keyframes tickerScroll {
+      to { transform: translateX(-50%); }
     }
 
-    .hero .subtitle {
+    /* ===== FOCUS STATES ===== */
+    :focus-visible {
+      outline: 2px solid var(--accent-hex);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+    .lang-toggle button:focus-visible { outline-color: rgba(255,255,255,0.6); outline-offset: 2px; }
+    .hero-cta:focus-visible { outline-color: #fff; }
+    .cta-badge:focus-visible { outline-offset: 4px; }
+
+    /* ===== REDUCED MOTION ===== */
+
+
+    /* ===== HOVER/ACTIVE STATES ===== */
+    .hero-cta:active { transform: translateY(0); box-shadow: none; }
+    .cta-badge:active { opacity: 0.7; }
+    .chat-suggestions .cs-pill { cursor: pointer; transition: background 0.15s, transform 0.15s; }
+    .chat-suggestions .cs-pill:hover { background: oklch(90% 0.012 45); transform: translateY(-1px); }
+    .detail-colloc span { transition: background 0.15s; cursor: default; }
+    .detail-colloc span:hover { background: oklch(93% 0.008 250); }
+    .ticker-item { transition: color 0.2s; cursor: default; }
+    .ticker-item:hover { color: var(--fg); }
+
+    /* ===== RESPONSIVE — MOBILE ===== */
+    @media (max-width: 768px) {
+      .ticker-item { font-size: 20px; padding: 0 20px; }
+    }
+    @media (max-width: 480px) {
+      .hero { padding: 60px 20px; min-height: 90vh; }
+      .hero-chars { font-size: 48px; }
+      .hero-sub { font-size: 14px; }
+      .ticker-item { font-size: 18px; padding: 0 16px; }
+      .ticker-section { padding: 20px 0; }
+      .stats-grid { gap: 32px 40px; }
+      .stat-item .number { font-size: 36px; }
+      .cta-section { padding: 80px 20px; }
+      .cta-section h2 { font-size: 28px; }
+      .phone { width: 240px; height: 480px; }
+      .feat-text h2 { font-size: 24px; }
+      .feat-text p { font-size: 14px; }
+    }
+    @media (max-width: 360px) {
+      .phone { width: 220px; height: 440px; }
+      .feat-section, .feat-section.reverse { padding: 60px 16px; gap: 36px; }
+      .ticker-item { font-size: 16px; padding: 0 12px; }
+      .hero-chars { font-size: 40px; }
+    }
+</style>
+<style>
+    /* ===== PHONE MOCKUP SHARED ===== */
+    .phone {
+      width: 260px;
+      height: 520px;
+      border-radius: 36px;
+      background: #000;
+      padding: 10px;
+      box-shadow: 0 40px 80px oklch(15% 0.02 250 / 0.2), 0 0 0 1px oklch(40% 0.01 250 / 0.15);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      background: oklch(98% 0.004 70);
+    }
+    .phone-notch {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100px; height: 24px;
+      background: #000;
+      border-radius: 0 0 14px 14px;
+      z-index: 10;
+    }
+    /* ===== FEATURE SECTIONS ===== */
+    .feat-section {
+      padding: 120px 24px;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 80px;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .feat-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .feat-section.reverse { flex-direction: row-reverse; }
+    .feat-text { flex: 1; max-width: 400px; }
+    .feat-text .kicker {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-hex);
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .feat-text h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 36px);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+    .feat-text p {
       font-size: 15px;
       color: var(--muted);
-      max-width: 440px;
-      margin: 0 auto 40px;
       line-height: 1.7;
+      max-width: 50ch;
+    }
+    @media (max-width: 768px) {
+      .feat-section, .feat-section.reverse {
+        flex-direction: column;
+        gap: 48px;
+        padding: 80px 24px;
+      }
+    }
+    .feat-divider {
+      border: none;
+      height: 1px;
+      background: var(--border);
+      max-width: 1080px;
+      margin: 0 auto;
     }
 
-    .hero .badges {
+    /* ===== FEED PHONE ANIM ===== */
+    .feed-scroll-container {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .feed-strip {
+      display: flex;
+      flex-direction: column;
+      height: 800%;
+      animation: feedCycle 42s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .feed-pinyin-pill { pointer-events: auto; cursor: pointer; }
+    .feed-scroll-container:hover .feed-strip { animation-play-state: paused; }
+    @keyframes feedCycle {
+      /* Down: 7 snaps to reach card 8 */
+      0%, 5%       { transform: translateY(0); }
+      6.5%, 11.5%  { transform: translateY(-12.5%); }
+      13%, 18%     { transform: translateY(-25%); }
+      19.5%, 24.5% { transform: translateY(-37.5%); }
+      26%, 31%     { transform: translateY(-50%); }
+      32.5%, 37.5% { transform: translateY(-62.5%); }
+      39%, 44%     { transform: translateY(-75%); }
+      45.5%, 50%   { transform: translateY(-87.5%); }
+      /* Up: 7 snaps back to card 1 */
+      51.5%, 56.5% { transform: translateY(-75%); }
+      58%, 63%     { transform: translateY(-62.5%); }
+      64.5%, 69.5% { transform: translateY(-50%); }
+      71%, 76%     { transform: translateY(-37.5%); }
+      77.5%, 82.5% { transform: translateY(-25%); }
+      84%, 89%     { transform: translateY(-12.5%); }
+      90.5%, 100%  { transform: translateY(0); }
+    }
+    .feed-card {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      flex-shrink: 0;
+    }
+    .feed-char {
+      font-size: 52px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: oklch(25% 0.01 250);
+      margin-bottom: 12px;
+    }
+    .feed-pinyin-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: oklch(94% 0.005 70);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 11px;
+      color: oklch(40% 0.01 250);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .feed-pinyin-pill:hover { background: oklch(90% 0.01 70); }
+    .feed-pinyin-pill:active { transform: scale(0.95); }
+    .feed-pinyin-pill .speaker { font-size: 12px; opacity: 0.7; }
+    .feed-def {
+      font-size: 11px;
+      color: oklch(40% 0.01 250);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ===== WORD DETAIL PHONE ANIM ===== */
+    .detail-content {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .detail-content::-webkit-scrollbar { display: none; }
+    .detail-body { padding: 28px 14px 8px; text-align: center; }
+    .detail-char {
+      font-size: 42px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: oklch(20% 0.01 250);
+      display: inline;
+    }
+    .detail-trad {
+      font-size: 20px;
+      color: oklch(70% 0.01 250);
+      font-weight: 300;
+      margin-left: 6px;
+    }
+    .detail-pinyin {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: oklch(94% 0.005 70);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 11px;
+      color: oklch(40% 0.01 250);
+      margin: 10px 0 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .detail-pinyin:active { background: oklch(90% 0.01 70); }
+    .detail-def {
+      font-size: 11px;
+      color: oklch(40% 0.01 250);
+      margin-bottom: 10px;
+    }
+    .detail-tags {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      flex-wrap: nowrap;
+      margin-bottom: 12px;
+    }
+    .detail-tags span {
+      font-size: 8px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid oklch(88% 0.005 250);
+      color: oklch(40% 0.01 250);
+      white-space: nowrap;
+    }
+    .detail-char-tabs {
+      display: flex;
+      border-bottom: 1.5px solid oklch(90% 0.005 250);
+      margin: 0 14px;
+    }
+    .detail-char-tabs span {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 16px;
+      color: oklch(50% 0.01 250);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .detail-char-tabs span.active {
+      color: oklch(20% 0.01 250);
+      border-bottom: 2px solid oklch(20% 0.01 250);
+    }
+    .detail-stroke-section {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      margin-top: 6px;
+    }
+    .detail-hanzi-box {
+      width: 90px;
+      height: 90px;
+      border: 1.5px dashed oklch(80% 0.01 250);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .detail-hanzi-box svg { width: 100% !important; height: 100% !important; }
+    .detail-stroke-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 8px;
+      color: oklch(50% 0.01 250);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .detail-stroke-info .dsi-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: oklch(55% 0.12 240);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .detail-stroke-info .dsi-row {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .detail-extra {
+      padding: 14px;
+      border-top: 1px solid oklch(92% 0.005 250);
+      margin-top: 10px;
+    }
+    .detail-extra-title {
+      font-size: 9px;
+      font-weight: 600;
+      color: oklch(35% 0.01 250);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+    .detail-example {
+      margin-bottom: 10px;
+      padding-left: 8px;
+      border-left: 2px solid oklch(88% 0.005 250);
+    }
+    .detail-example .de-zh {
+      font-size: 12px;
+      color: oklch(20% 0.01 250);
+      font-weight: 500;
+    }
+    .detail-example .de-py {
+      font-size: 9px;
+      color: oklch(55% 0.01 250);
+    }
+    .detail-example .de-vi {
+      font-size: 10px;
+      color: oklch(40% 0.01 250);
+    }
+    .de-audio {
+      float: right;
+      font-size: 10px;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.15s;
+      pointer-events: auto;
+    }
+    .de-audio:hover { opacity: 1; }
+    [data-audio] { cursor: pointer; }
+    .detail-colloc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .detail-colloc span {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: oklch(96% 0.004 250);
+      color: oklch(30% 0.01 250);
+    }
+
+    /* ===== AI CHAT PHONE ANIM ===== */
+    .chat-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: oklch(98% 0.003 70);
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 32px 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      justify-content: flex-start;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .chat-messages::-webkit-scrollbar { display: none;
+    }
+    .chat-bubble {
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 9.5px;
+      line-height: 1.5;
+      max-width: 85%;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .chat-bubble.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .chat-user {
+      align-self: flex-end;
+      background: oklch(20% 0.01 250);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-thinking {
+      align-self: flex-start;
+      background: oklch(94% 0.005 250);
+      border-bottom-left-radius: 4px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .chat-thinking .dot {
+      display: inline-block;
+      animation: dotBounce 1.2s infinite;
+      opacity: 0.5;
+    }
+    .chat-thinking .dot:nth-child(2) { animation-delay: 0.2s; }
+    .chat-thinking .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-3px); }
+    }
+    .chat-ai-response {
+      align-self: flex-start;
+      background: oklch(96% 0.005 70);
+      color: oklch(25% 0.01 250);
+      border-bottom-left-radius: 4px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 9.5px;
+      line-height: 1.6;
+      max-width: 88%;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .chat-ai-response.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .chat-ai-response strong { font-weight: 600; }
+    .chat-input-bar {
+      flex-shrink: 0;
+      margin: 0 10px 12px;
+      display: flex;
+      align-items: center;
+      background: oklch(94% 0.005 250);
+      border-radius: 20px;
+      padding: 8px 12px;
+      gap: 8px;
+    }
+    .chat-input-bar .cib-text {
+      font-size: 9px;
+      color: oklch(20% 0.01 250);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .chat-input-bar .cib-text::after {
+      content: '|';
+      color: var(--accent-hex);
+      animation: cursorBlink 0.8s infinite;
+      margin-left: 1px;
+    }
+    .chat-input-bar .cib-send {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: oklch(40% 0.01 250);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 9px;
+      transition: background 0.2s;
+    }
+    .chat-input-bar .cib-send.active { background: var(--accent-hex); }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+
+    /* Chat extra results */
+    .chat-word-card {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid oklch(90% 0.005 250);
+      border-radius: 10px;
+      padding: 8px 10px;
+      width: 88%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .chat-word-card.visible { opacity: 1; transform: translateY(0); }
+    .chat-word-card .cwc-char { font-size: 18px; font-weight: 500; color: oklch(25% 0.01 250); }
+    .chat-word-card .cwc-info { flex: 1; }
+    .chat-word-card .cwc-py { font-size: 8px; color: oklch(55% 0.01 250); }
+    .chat-word-card .cwc-mean { font-size: 9px; color: oklch(35% 0.01 250); }
+    .chat-word-card .cwc-audio { font-size: 10px; opacity: 0.5; cursor: pointer; pointer-events: auto; }
+    .chat-word-card .cwc-audio:hover { opacity: 1; }
+    .chat-example {
+      align-self: flex-start;
+      background: oklch(97% 0.003 250);
+      border-radius: 10px;
+      padding: 8px 10px;
+      width: 88%;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .chat-example.visible { opacity: 1; transform: translateY(0); }
+    .chat-example .ce-zh { font-size: 10px; color: oklch(20% 0.01 250); font-weight: 500; }
+    .chat-example .ce-py { font-size: 8px; color: oklch(55% 0.01 250); }
+    .chat-example .ce-vi { font-size: 9px; color: oklch(40% 0.01 250); }
+    .chat-example .ce-audio { float: right; font-size: 10px; opacity: 0.5; cursor: pointer; pointer-events: auto; }
+    .chat-example .ce-audio:hover { opacity: 1; }
+    .chat-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 4px 0;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .chat-suggestions.visible { opacity: 1; transform: translateY(0); }
+    .chat-suggestions .cs-pill {
+      font-size: 8px;
+      padding: 5px 10px;
+      border-radius: 14px;
+      background: oklch(94% 0.008 45);
+      color: oklch(35% 0.02 45);
+      white-space: nowrap;
+    }
+
+    /* ===== GRAMMAR PHONE ANIM ===== */
+    .grammar-content {
+      position: absolute;
+      inset: 0;
+      padding: 32px 0 0;
+      overflow: hidden;
+      background: #fff;
+    }
+    .grammar-filters {
+      display: flex;
+      gap: 5px;
+      padding: 8px 10px;
+      overflow-x: hidden;
+    }
+    .grammar-filters span {
+      font-size: 8px;
+      padding: 4px 8px;
+      border-radius: 14px;
+      border: 1px solid oklch(88% 0.005 250);
+      white-space: nowrap;
+      color: oklch(40% 0.01 250);
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .grammar-filters span:hover { background: oklch(95% 0.005 250); }
+    .grammar-filters span:active { transform: scale(0.92); }
+    .grammar-filters span:focus-visible { outline: 2px solid var(--accent-hex); outline-offset: 2px; }
+    .grammar-filters span.gf-ai {
+      background: linear-gradient(135deg, oklch(72% 0.14 300), oklch(60% 0.18 280));
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      animation: aiPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes aiPulse {
+      0%, 100% { box-shadow: 0 0 0 0 oklch(65% 0.15 290 / 0.3); }
+      50% { box-shadow: 0 0 8px 2px oklch(65% 0.15 290 / 0.2); }
+    }
+    .grammar-text {
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 2;
+      color: oklch(20% 0.01 250);
+    }
+    .grammar-text .gh {
+      background: oklch(90% 0.08 290);
+      padding: 2px 3px;
+      border-radius: 2px;
+      text-decoration: underline;
+      text-decoration-color: oklch(65% 0.14 290);
+      animation: highlightPulse 3s ease-in-out infinite;
+    }
+    @keyframes highlightPulse {
+      0%, 100% { background: oklch(90% 0.08 290); }
+      50% { background: oklch(85% 0.12 290); }
+    }
+    .grammar-sheet {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-radius: 14px 14px 0 0;
+      padding: 14px 12px 16px;
+      box-shadow: 0 -8px 30px oklch(20% 0.02 250 / 0.12);
+      transform: translateY(100%);
+      animation: sheetUp 0.6s 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes sheetUp {
+      to { transform: translateY(0); }
+    }
+    .grammar-sheet .gs-handle {
+      width: 28px; height: 3px;
+      background: oklch(80% 0.005 250);
+      border-radius: 2px;
+      margin: 0 auto 10px;
+    }
+    .grammar-sheet .gs-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .grammar-sheet .gs-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      flex: 1;
+    }
+    .grammar-sheet .gs-hsk {
+      font-size: 8px;
+      font-weight: 700;
+      background: oklch(40% 0.04 70);
+      color: #fff;
+      padding: 3px 7px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .grammar-sheet .gs-ai-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .grammar-sheet .gs-ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 8px;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, oklch(72% 0.14 300), oklch(60% 0.18 280));
+      padding: 2px 7px;
+      border-radius: 3px;
+      animation: aiPulse 2.5s ease-in-out infinite;
+    }
+    .grammar-sheet .gs-ai-label {
+      font-size: 8px;
+      color: oklch(50% 0.01 250);
+    }
+    .grammar-sheet .gs-label {
+      font-size: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: oklch(55% 0.01 250);
+      margin-bottom: 3px;
+      margin-top: 8px;
+    }
+    .grammar-sheet .gs-desc {
+      font-size: 9px;
+      color: oklch(30% 0.01 250);
+      line-height: 1.5;
+    }
+    .grammar-sheet .gs-example {
+      font-size: 10px;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .grammar-sheet .gs-example .gse-cn { font-weight: 600; color: oklch(20% 0.01 250); }
+    .grammar-sheet .gs-example .gse-py { font-size: 8px; color: oklch(55% 0.01 250); font-style: italic; }
+    .grammar-sheet .gs-example .gse-vi { font-size: 8px; color: oklch(55% 0.08 25); font-style: italic; }
+
+    /* ===== SCAN PHONE ANIM ===== */
+    .scan-content {
+      position: absolute;
+      inset: 0;
+      padding: 14px 8px 8px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .scan-content::-webkit-scrollbar { display: none; }
+    .scan-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      padding: 4px;
+    }
+    .scan-char {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid oklch(88% 0.005 250);
+      border-radius: 6px;
+      cursor: pointer;
+      opacity: 0;
+      transform: scale(0.7);
+      animation: charPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .scan-char:hover { border-color: oklch(70% 0.05 250); }
+    .scan-char:focus-visible { outline: 2px solid var(--accent-hex); outline-offset: 2px; border-radius: 6px; }
+    .scan-char:active { transform: scale(0.93); }
+    .scan-char.sc-active {
+      border-color: var(--accent-hex);
+      box-shadow: 0 0 0 2px oklch(68% 0.11 45 / 0.2);
+    }
+    .scan-char .sc-hz { width: 32px; height: 32px; }
+    .scan-char .sc-py {
+      font-size: 7px;
+      color: var(--muted);
+      display: block;
+      margin-top: 1px;
+    }
+    @keyframes charPop {
+      to { opacity: 1; transform: scale(1); }
+    }
+    .scan-grammar-card {
+      position: sticky;
+      bottom: 0;
+      margin: 8px 0 0;
+      background: oklch(18% 0.01 250);
+      border-radius: 14px;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .scan-grammar-card .sgc-icon {
+      font-size: 9px;
+      background: linear-gradient(135deg, oklch(72% 0.14 300), oklch(60% 0.18 280));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .scan-grammar-card .sgc-title {
+      font-size: 9px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .scan-grammar-card .sgc-badges {
+      display: flex;
+      gap: 3px;
+      margin-left: auto;
+      align-items: center;
+    }
+    .scan-grammar-card .sgc-badge {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .scan-grammar-card .sgc-badge.ai {
+      background: linear-gradient(135deg, oklch(72% 0.14 300), oklch(60% 0.18 280));
+      animation: aiPulse 2.5s ease-in-out infinite;
+    }
+    .scan-grammar-card .sgc-badge.hsk6 { background: oklch(58% 0.12 55); }
+    .scan-grammar-card .sgc-badge.hsk5 { background: oklch(52% 0.12 155); }
+    .scan-grammar-card .sgc-more {
+      font-size: 8px;
+      color: oklch(60% 0.01 250);
+      font-weight: 500;
+    }
+    .scan-grammar-card .sgc-arrow {
+      font-size: 9px;
+      color: oklch(65% 0.01 250);
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      line-height: 1;
+    }
+
+    /* ===== STATS ===== */
+    .stats-section {
+      padding: 100px 24px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-grid {
       display: flex;
       justify-content: center;
-      gap: 12px;
+      gap: 64px;
+      max-width: 900px;
+      margin: 0 auto;
       flex-wrap: wrap;
     }
+    .stat-item { text-align: center; }
+    .stat-item .number {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 6vw, 56px);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-item .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-top: 8px;
+    }
 
-    /* Store badge */
-    .store-badge {
+    /* ===== CTA ===== */
+    .cta-section {
+      padding: 120px 24px;
+      text-align: center;
+    }
+    .cta-section h2 {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .cta-section p {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 40px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+    }
+    .cta-badge {
       display: inline-flex;
       align-items: center;
       gap: 12px;
       background: var(--fg);
       color: #fff;
-      padding: 12px 24px;
+      padding: 14px 28px;
       border-radius: 10px;
       text-decoration: none;
       transition: opacity 0.2s;
     }
+    .cta-badge:hover { opacity: 0.85; }
+    .cta-badge .badge-text { text-align: left; line-height: 1.2; }
+    .cta-badge .badge-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; }
+    .cta-badge .badge-store { font-size: 17px; font-weight: 600; }
 
-    .store-badge:hover {
-      opacity: 0.85;
-    }
-
-    .store-badge svg {
-      flex-shrink: 0;
-    }
-
-    .store-badge .badge-text {
-      text-align: left;
-      line-height: 1.2;
-    }
-
-    .store-badge .badge-label {
-      font-size: 10px;
-      font-weight: 400;
-      opacity: 0.7;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .store-badge .badge-store {
-      font-size: 17px;
-      font-weight: 600;
-    }
-
-    /* Stats — editorial: accent rule above, generous spacing */
-    .stats {
-      display: flex;
-      justify-content: space-between;
-      padding: 40px 0;
-      border-top: 2px solid var(--accent);
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 80px;
-    }
-
-    @media (max-width: 600px) {
-      .stats {
-        flex-wrap: wrap;
-        gap: 24px;
-        justify-content: center;
-      }
-    }
-
-    .stat {
-      text-align: center;
-      flex: 1;
-    }
-
-    .stat .number {
-      font-family: var(--font-display);
-      font-size: 26px;
-      font-weight: 500;
-      color: var(--fg);
-    }
-
-    .stat .label {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-top: 4px;
-    }
-
-    /* Section headers — editorial serif */
-    .section-header {
-      margin-bottom: 48px;
-    }
-
-    .section-header h2 {
-      font-family: var(--font-display);
-      font-size: clamp(28px, 5vw, 36px);
-      font-weight: 400;
-      letter-spacing: -0.01em;
-      margin-bottom: 8px;
-    }
-
-    .section-header p {
-      font-size: 15px;
-      color: var(--muted);
-    }
-
-    /* Features — editorial: stacked list, no cards, asymmetric */
-    .features {
-      padding: 0 0 80px;
-    }
-
-    .features-list {
-      display: grid;
-      gap: 0;
-    }
-
-    .feature-item {
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 24px;
-      padding: 28px 0;
-      border-bottom: 1px solid var(--border);
-      align-items: baseline;
-    }
-
-    .feature-item:first-child {
-      border-top: 1px solid var(--border);
-    }
-
-    .feature-item h3 {
-      font-family: var(--font-display);
-      font-size: 18px;
-      font-weight: 500;
-      letter-spacing: -0.01em;
-    }
-
-    .feature-item p {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    @media (max-width: 600px) {
-      .feature-item {
-        grid-template-columns: 1fr;
-        gap: 6px;
-      }
-    }
-
-    /* Feature highlight — one full-width callout */
-    .feature-highlight {
-      padding: 40px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .feature-highlight .kicker {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--accent);
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .feature-highlight h3 {
-      font-family: var(--font-display);
-      font-size: 24px;
-      font-weight: 400;
-      margin-bottom: 12px;
-    }
-
-    .feature-highlight p {
-      font-size: 15px;
-      color: var(--muted);
-      line-height: 1.7;
-      max-width: 560px;
-    }
-
-    /* How it works — editorial numbered list */
-    .how-it-works {
-      padding: 80px 0;
-    }
-
-    .steps {
-      counter-reset: step;
-      display: grid;
-      gap: 32px;
-    }
-
-    .step {
-      counter-increment: step;
-      display: grid;
-      grid-template-columns: 40px 1fr;
-      gap: 16px;
-      align-items: baseline;
-    }
-
-    .step::before {
-      content: counter(step);
-      font-family: var(--font-display);
-      font-size: 28px;
-      font-weight: 300;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    .step h3 {
-      font-family: var(--font-display);
-      font-size: 18px;
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    .step p {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    /* About — editorial prose */
-    .about {
-      padding: 0 0 80px;
-      border-top: 1px solid var(--border);
-      padding-top: 80px;
-    }
-
-    .about h2 {
-      font-family: var(--font-display);
-      font-size: 28px;
-      font-weight: 400;
-      margin-bottom: 20px;
-    }
-
-    .about p {
-      font-size: 15px;
-      color: var(--muted);
-      margin-bottom: 16px;
-      line-height: 1.8;
-    }
-
-    .about p:last-child {
-      margin-bottom: 0;
-    }
-
-    /* Footer — quiet, editorial */
+    /* ===== FOOTER ===== */
     .footer {
-      padding: 40px 0;
+      padding: 40px 24px;
       border-top: 1px solid var(--border);
       font-size: 13px;
       color: var(--muted);
+      max-width: 1080px;
+      margin: 0 auto;
     }
-
     .footer-inner {
       display: flex;
       justify-content: space-between;
@@ -343,237 +1110,894 @@
       flex-wrap: wrap;
       gap: 16px;
     }
-
-    .footer a {
-      color: var(--fg);
-      text-decoration: none;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
-    .footer .links {
-      display: flex;
-      gap: 24px;
-    }
-
-    .footer .contact a {
-      font-weight: 500;
-    }
-
+    .footer a { color: var(--fg); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    .footer .links { display: flex; gap: 24px; }
     @media (max-width: 600px) {
-      .footer-inner {
-        flex-direction: column;
-        gap: 12px;
-      }
+      .footer-inner { flex-direction: column; gap: 12px; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 </head>
-
 <body>
 
-  <div class="container">
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <!-- Hero -->
-    <section class="hero">
-      <img src="assets/icon-dark.png" alt="Chifanlema logo" class="logo">
-      <h1>吃饭了吗</h1>
-      <p class="tagline">Learn Chinese, one word at a time.</p>
-      <p class="subtitle">A micro-learning app that teaches Mandarin vocabulary through a TikTok-style feed, AI chat
-        search, stroke order animations, and lock screen widgets.</p>
-      <div class="badges">
-        <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M3.61 1.814L13.793 12 3.61 22.186a1.005 1.005 0 01-.61-.92V2.734c0-.39.228-.734.61-.92z"
-              fill="#4285F4" />
-            <path d="M17.091 8.703L5.12.87a1.005 1.005 0 00-1.51.944l10.183 10.183 3.298-3.294z" fill="#EA4335" />
-            <path d="M3.61 22.186L13.793 12l3.298 3.297L5.12 23.13a1.005 1.005 0 01-1.51-.944z" fill="#34A853" />
-            <path d="M21.39 12c0 .5-.27.96-.71 1.2l-3.59 2.1-3.297-3.3 3.298-3.297 3.59 2.097c.44.24.71.7.71 1.2z"
-              fill="#FBBC04" />
-          </svg>
-          <div class="badge-text">
-            <span class="badge-label">Get it on</span><br>
-            <span class="badge-store">Google Play</span>
-          </div>
-        </a>
-      </div>
-    </section>
-
-    <!-- Stats -->
-    <section class="stats">
-      <div class="stat">
-        <div class="number">25,000+</div>
-        <div class="label">Words</div>
-      </div>
-      <div class="stat">
-        <div class="number">HSK 1-6</div>
-        <div class="label">Levels</div>
-      </div>
-      <div class="stat">
-        <div class="number">77</div>
-        <div class="label">Topics</div>
-      </div>
-      <div class="stat">
-        <div class="number">EN &amp; VI</div>
-        <div class="label">Languages</div>
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section class="features">
-      <div class="section-header">
-        <h2>Everything you need to learn Chinese</h2>
-        <p>From vocabulary to writing, pronunciation to comprehension.</p>
-      </div>
-
-      <!-- Highlight feature -->
-      <div class="feature-highlight">
-        <div class="kicker">Core Experience</div>
-        <h3>Word Feed</h3>
-        <p>Swipe through vocabulary in a full-screen vertical feed. "Daily Words" gives you a personalized set based on
-          your HSK level, while "For You" adapts to your learning history.</p>
-      </div>
-
-      <!-- Feature list -->
-      <div class="features-list">
-        <div class="feature-item">
-          <h3>AI Chat Search</h3>
-          <p>Ask anything in English, Vietnamese, or Chinese. Get streaming AI responses with word breakdowns, example
-            sentences, and contextual follow-up suggestions.</p>
-        </div>
-        <div class="feature-item">
-          <h3>Stroke Order</h3>
-          <p>Interactive character writing with HanziWriter. See each stroke animated step-by-step. Tap individual
-            characters in multi-character words for detailed breakdowns.</p>
-        </div>
-        <div class="feature-item">
-          <h3>Native Pronunciation</h3>
-          <p>Auto-play audio as you scroll. AI-generated TTS for natural Chinese pronunciation with emotion-aware
-            prosody and gender-matched voices.</p>
-        </div>
-        <div class="feature-item">
-          <h3>Lock Screen Widgets</h3>
-          <p>Learn passively throughout the day. iOS WidgetKit and Android Glance widgets show your daily words right on
-            your lock screen.</p>
-        </div>
-        <div class="feature-item">
-          <h3>Collections &amp; History</h3>
-          <p>Browse words by HSK level or 77 topic categories. Track your viewing history, bookmark favorites, and
-            organize words into personal collections.</p>
-        </div>
-        <div class="feature-item">
-          <h3>Shareable Word Cards</h3>
-          <p>Generate beautiful 4:5 word cards with pinyin, meaning, and example sentences. Save to your photo library
-            or share directly to social media.</p>
-        </div>
-        <div class="feature-item">
-          <h3>Voice Search</h3>
-          <p>Speak in Chinese, English, or Vietnamese to search. Speech recognition built into the floating search bar
-            for hands-free word lookup.</p>
-        </div>
-        <div class="feature-item">
-          <h3>Bilingual Interface</h3>
-          <p>Full English and Vietnamese UI. Word definitions, example sentences, and AI responses available in both
-            languages.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- How it works -->
-    <section class="how-it-works">
-      <div class="section-header">
-        <h2>Start learning in 30 seconds</h2>
-        <p>No complicated setup. Just pick your level and go.</p>
-      </div>
-
-      <div class="steps">
-        <div class="step">
-          <div>
-            <h3>Choose your level</h3>
-            <p>Select HSK 1–6 based on your current Chinese proficiency.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div>
-            <h3>Set a daily goal</h3>
-            <p>Pick 5, 10, 20, or 30 new words per day to match your schedule.</p>
-          </div>
-        </div>
-        <div class="step">
-          <div>
-            <h3>Swipe &amp; learn</h3>
-            <p>Scroll through your personalized feed. Tap words for details, stroke order, and audio.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- About -->
-    <section class="about">
-      <h2>About Chifanlema</h2>
-      <p>
-        Chifanlema (吃饭了吗 — "Have you eaten?") is a micro-learning app that makes Mandarin Chinese vocabulary
-        stick through daily repetition and an engaging, scroll-friendly format. Over 25,000 words covering HSK levels
-        1–6
-        and 77 topic categories, with bilingual definitions in English and Vietnamese.
-      </p>
-      <p>
-        The app combines AI-powered search, animated stroke order, AI-generated pronunciation,
-        and shareable word cards — all wrapped in a warm minimalist design that works beautifully in both light and dark
-        mode.
-      </p>
-      <p>
-        Built by an indie developer in Vietnam. Free to use with an optional premium subscription for an ad-free
-        experience and unlimited AI searches.
-      </p>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-inner">
-        <span>&copy; 2026 Chifanlema</span>
-        <div class="links">
-          <a href="https://cqhung1412.github.io/chifanlema/privacy-policy.html">Privacy</a>
-          <a href="https://cqhung1412.github.io/chifanlema/terms-of-service.html">Terms</a>
-          <span class="contact"><a href="mailto:hungcq.chifanlema@gmail.com">hungcq.chifanlema@gmail.com</a></span>
-        </div>
-      </div>
-    </footer>
-
+  <!-- Language toggle -->
+  <div class="lang-toggle" id="lang-toggle" role="group" aria-label="Language">
+    <button class="active" data-lang="en" aria-pressed="true">EN</button>
+    <button data-lang="vi" aria-pressed="false">VI</button>
   </div>
+  <div aria-live="polite" aria-atomic="true" class="sr-only" id="lang-announce"></div>
 
-  <!-- WebMCP: Expose site tools to AI agents via the browser -->
+  <main id="main-content">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg-chars" aria-hidden="true">
+      <span style="left:5%;animation-delay:0s">学</span>
+      <span style="left:15%;animation-delay:4s">爱</span>
+      <span style="left:25%;animation-delay:8s">友</span>
+      <span style="left:38%;animation-delay:2s">书</span>
+      <span style="left:52%;animation-delay:6s">花</span>
+      <span style="left:65%;animation-delay:10s">月</span>
+      <span style="left:75%;animation-delay:3s">心</span>
+      <span style="left:88%;animation-delay:7s">人</span>
+      <span style="left:92%;animation-delay:12s">天</span>
+    </div>
+    <div class="hero-chars">
+      <span class="hero-char">吃</span>
+      <span class="hero-char">饭</span>
+      <span class="hero-char">了</span>
+      <span class="hero-char">吗</span>
+    </div>
+    <p class="hero-tagline" data-i18n="hero.tagline">Learn Chinese, one word at a time.</p>
+    <p class="hero-sub" data-i18n="hero.sub">A vocabulary app with 40,000+ words, AI chat, grammar detection, stroke animations, and a feed that makes learning feel like scrolling.</p>
+    <a href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema" class="hero-cta" aria-label="Download Chifanlema on Google Play">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span data-i18n="hero.cta">Download on Google Play</span>
+    </a>
+  </section>
+
+  <!-- Ticker -->
+  <section class="ticker-section" aria-label="Chinese vocabulary showcase">
+    <div class="ticker-track">
+      <div class="ticker-item"><span class="pinyin">nǐ hǎo</span>你好</div>
+      <div class="ticker-item"><span class="pinyin">xièxie</span>谢谢</div>
+      <div class="ticker-item"><span class="pinyin">péngyou</span>朋友</div>
+      <div class="ticker-item"><span class="pinyin">xuéxí</span>学习</div>
+      <div class="ticker-item"><span class="pinyin">zhōngguó</span>中国</div>
+      <div class="ticker-item"><span class="pinyin">jiātíng</span>家庭</div>
+      <div class="ticker-item"><span class="pinyin">kuàilè</span>快乐</div>
+      <div class="ticker-item"><span class="pinyin">shíjiān</span>时间</div>
+      <div class="ticker-item"><span class="pinyin">yīnyuè</span>音乐</div>
+      <div class="ticker-item"><span class="pinyin">lǚxíng</span>旅行</div>
+      <div class="ticker-item"><span class="pinyin">nǐ hǎo</span>你好</div>
+      <div class="ticker-item"><span class="pinyin">xièxie</span>谢谢</div>
+      <div class="ticker-item"><span class="pinyin">péngyou</span>朋友</div>
+      <div class="ticker-item"><span class="pinyin">xuéxí</span>学习</div>
+      <div class="ticker-item"><span class="pinyin">zhōngguó</span>中国</div>
+      <div class="ticker-item"><span class="pinyin">jiātíng</span>家庭</div>
+      <div class="ticker-item"><span class="pinyin">kuàilè</span>快乐</div>
+      <div class="ticker-item"><span class="pinyin">shíjiān</span>时间</div>
+      <div class="ticker-item"><span class="pinyin">yīnyuè</span>音乐</div>
+      <div class="ticker-item"><span class="pinyin">lǚxíng</span>旅行</div>
+    </div>
+  </section>
+
+  <!-- 1. FEED -->
+  <section class="feat-section" id="feat-feed">
+    <div class="feat-text">
+      <p class="kicker" data-i18n="feed.kicker">WORD FEED</p>
+      <h2 data-i18n="feed.title">Scroll through vocabulary<br>like a social feed</h2>
+      <p data-i18n="feed.desc">Swipe through full-screen word cards. Each card shows the character, pinyin, and definition. Tap for detailed breakdowns. Set a daily goal of 5–30 words.</p>
+    </div>
+    <div class="phone">
+      <div class="phone-notch" aria-hidden="true"></div>
+      <div class="phone-inner">
+        <div class="feed-scroll-container" id="feed-scroll">
+          <div class="feed-strip">
+          <div class="feed-card">
+            <div class="feed-char">家庭</div>
+            <div class="feed-pinyin-pill" data-audio="jiā tíng" data-zh="家庭">jiā tíng <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.1">(n.) Gia đình; mái nhà; tổ ấm; mái ấm</div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-char">父母</div>
+            <div class="feed-pinyin-pill" data-audio="fù mǔ" data-zh="父母">fù mǔ <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.2">(n.) Cha mẹ; phụ mẫu; ba má</div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-char">兄弟</div>
+            <div class="feed-pinyin-pill" data-audio="xiōng dì" data-zh="兄弟">xiōng dì <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.3">(n.) Anh em trai; huynh đệ</div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-char">姐妹</div>
+            <div class="feed-pinyin-pill" data-audio="jiě mèi" data-zh="姐妹">jiě mèi <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.4">(n.) Chị em gái; tỷ muội</div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-char">祖父</div>
+            <div class="feed-pinyin-pill" data-audio="zǔ fù" data-zh="祖父">zǔ fù <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.5">(n.) Ông nội; ông ngoại</div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-char">婚姻</div>
+            <div class="feed-pinyin-pill" data-audio="hūn yīn" data-zh="婚姻">hūn yīn <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.6">(n.) Hôn nhân; cuộc sống vợ chồng</div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-char">抚养</div>
+            <div class="feed-pinyin-pill" data-audio="fǔ yǎng" data-zh="抚养">fǔ yǎng <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.7">(v.) Nuôi dưỡng; nuôi nấng; chăm sóc</div>
+          </div>
+          <div class="feed-card">
+            <div class="feed-char">孝顺</div>
+            <div class="feed-pinyin-pill" data-audio="xiào shùn" data-zh="孝顺">xiào shùn <span class="speaker">🔊</span></div>
+            <div class="feed-def" data-i18n="feed.def.8">(adj.) Hiếu thảo; nghe lời cha mẹ</div>
+          </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="feat-divider">
+
+  <!-- 2. WORD DETAIL -->
+  <section class="feat-section reverse" id="feat-detail">
+    <div class="feat-text">
+      <p class="kicker" data-i18n="detail.kicker">WORD DETAIL</p>
+      <h2 data-i18n="detail.title">Every character,<br>fully decomposed</h2>
+      <p data-i18n="detail.desc">Tap any word to see pinyin, definitions, HSK level, topic tags, stroke count, radical, components, and example sentences with Vietnamese translations.</p>
+    </div>
+    <div class="phone">
+      <div class="phone-notch" aria-hidden="true"></div>
+      <div class="phone-inner">
+        <div class="detail-content" id="detail-scroll">
+          <div class="detail-body">
+            <span class="detail-char">家庭</span><span class="detail-trad">傢庭</span>
+            <div><div class="detail-pinyin" data-audio="jiā tíng" data-zh="家庭">jiā tíng <span style="font-size:9px;opacity:0.6">🔊</span></div></div>
+            <div class="detail-def" data-i18n="detail.def">gia đình; mái nhà; tổ ấm; mái ấm</div>
+            <div class="detail-tags">
+              <span data-i18n="detail.tag.1">Danh từ</span><span>HSK 2</span><span data-i18n="detail.tag.3">Gia đình</span><span data-i18n="detail.tag.4">Cuộc sống</span>
+            </div>
+          </div>
+          <div class="detail-char-tabs" id="detail-tabs">
+            <span class="active" data-char="家">家</span>
+            <span data-char="庭">庭</span>
+          </div>
+          <div class="detail-stroke-section">
+            <div class="detail-hanzi-box" id="hanzi-target"></div>
+            <div class="detail-stroke-info" id="stroke-info">
+              <div class="dsi-row"><span><span class="dsi-val">10</span><br><span data-i18n="detail.strokes">NÉT</span></span><span><span class="dsi-val">宀</span><br><span data-i18n="detail.radical">BỘ THỦ</span></span></div>
+              <div><span style="font-size:10px;color:oklch(35% 0.01 250)">冖 宀 豕</span><br><span data-i18n="detail.parts">BỘ PHẬN</span></div>
+              <div><span class="dsi-val">个</span><br><span data-i18n="detail.measure">LƯỢNG TỪ</span></div>
+            </div>
+          </div>
+          <div class="detail-extra">
+            <div class="detail-extra-title" data-i18n="detail.examples">Ví dụ</div>
+            <div class="detail-example">
+              <div class="de-zh">我的<strong>家庭</strong>有五口人。<span class="de-audio" data-audio="我的家庭有五口人" data-zh="我的家庭有五口人">🔊</span></div>
+              <div class="de-py">wǒ de jiātíng yǒu wǔ kǒu rén.</div>
+              <div class="de-vi" data-i18n="detail.ex.vi.1">Gia đình tôi có năm người.</div>
+            </div>
+            <div class="detail-example">
+              <div class="de-zh">她来自一个幸福的<strong>家庭</strong>。<span class="de-audio" data-audio="她来自一个幸福的家庭" data-zh="她来自一个幸福的家庭">🔊</span></div>
+              <div class="de-py">tā láizì yī gè xìngfú de jiātíng.</div>
+              <div class="de-vi" data-i18n="detail.ex.vi.2">Cô ấy đến từ một gia đình hạnh phúc.</div>
+            </div>
+            <div class="detail-example">
+              <div class="de-zh"><strong>家庭</strong>是最重要的。<span class="de-audio" data-audio="家庭是最重要的" data-zh="家庭是最重要的">🔊</span></div>
+              <div class="de-py">jiātíng shì zuì zhòngyào de.</div>
+              <div class="de-vi" data-i18n="detail.ex.vi.3">Gia đình là quan trọng nhất.</div>
+            </div>
+          </div>
+          <div class="detail-extra">
+            <div class="detail-extra-title" data-i18n="detail.collocations">Từ ghép</div>
+            <div class="detail-colloc">
+              <span>家庭主妇</span><span>家庭教师</span><span>家庭作业</span><span>家庭成员</span><span>家庭背景</span><span>大家庭</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="feat-divider">
+
+  <!-- 4. AI CHAT -->
+  <section class="feat-section" id="feat-chat">
+    <div class="feat-text">
+      <p class="kicker" data-i18n="chat.kicker">AI CHAT</p>
+      <h2 data-i18n="chat.title">Ask anything about<br>Chinese language</h2>
+      <p data-i18n="chat.desc">Type in English, Vietnamese, or Chinese. Get AI-powered responses with word breakdowns, pronunciation, examples, and follow-up suggestions.</p>
+    </div>
+    <div class="phone">
+      <div class="phone-notch" aria-hidden="true"></div>
+      <div class="phone-inner" style="background: oklch(98% 0.003 70)">
+        <div class="chat-content" id="chat-phone">
+          <div class="chat-messages" id="chat-msgs">
+            <div class="chat-bubble chat-user" id="chat-user-msg" data-i18n="chat.user.msg">Tiếng lóng của Gen Z Trung Quốc gần đây</div>
+            <div class="chat-bubble chat-thinking" id="chat-thinking"><span class="dot">•</span><span class="dot">•</span><span class="dot">•</span></div>
+            <div class="chat-ai-response" id="chat-ai-msg"></div>
+            <!-- Word cards -->
+            <div class="chat-word-card" id="cw1"><span class="cwc-char">永远</span><div class="cwc-info"><div class="cwc-py">yǒngyuǎn</div><div class="cwc-mean" data-i18n="chat.word.1">mãi mãi, vĩnh viễn</div></div><span class="cwc-audio" data-audio="yǒngyuǎn" data-zh="永远">🔊</span></div>
+            <div class="chat-word-card" id="cw2"><span class="cwc-char">笑死</span><div class="cwc-info"><div class="cwc-py">xiào sǐ</div><div class="cwc-mean" data-i18n="chat.word.2">cười chết, buồn cười quá</div></div><span class="cwc-audio" data-audio="xiào sǐ" data-zh="笑死">🔊</span></div>
+            <div class="chat-word-card" id="cw3"><span class="cwc-char">破防</span><div class="cwc-info"><div class="cwc-py">pò fáng</div><div class="cwc-mean" data-i18n="chat.word.3">mất phòng thủ, bị chạm đến</div></div><span class="cwc-audio" data-audio="pò fáng" data-zh="破防">🔊</span></div>
+            <!-- Example sentences -->
+            <div class="chat-example" id="ce1"><span class="ce-audio" data-audio="这首歌yyds" data-zh="这首歌永远的神">🔊</span><div class="ce-zh">这首歌yyds！</div><div class="ce-py">zhè shǒu gē yyds</div><div class="ce-vi" data-i18n="chat.ex.1">Bài hát này thần thánh vĩnh cửu!</div></div>
+            <div class="chat-example" id="ce2"><span class="ce-audio" data-audio="他的表情笑死我了" data-zh="他的表情笑死我了">🔊</span><div class="ce-zh">他的表情笑死我了。</div><div class="ce-py">tā de biǎoqíng xiào sǐ wǒ le</div><div class="ce-vi" data-i18n="chat.ex.2">Biểu cảm của anh ấy cười chết mất.</div></div>
+            <div class="chat-example" id="ce3"><span class="ce-audio" data-audio="看完这个视频我破防了" data-zh="看完这个视频我破防了">🔊</span><div class="ce-zh">看完这个视频我破防了。</div><div class="ce-py">kàn wán zhège shìpín wǒ pò fáng le</div><div class="ce-vi" data-i18n="chat.ex.3">Xem xong video này tôi bị chạm đến thật sự.</div></div>
+            <!-- Suggestion pills -->
+            <div class="chat-suggestions" id="chat-suggest"><span class="cs-pill" data-i18n="chat.sug.1">Còn từ lóng nào nữa?</span><span class="cs-pill" data-i18n="chat.sug.2">Cho ví dụ với "破防"</span><span class="cs-pill" data-i18n="chat.sug.3">Dịch sang tiếng Việt tự nhiên hơn</span></div>
+          </div>
+          <div class="chat-input-bar" id="chat-input">
+            <span class="cib-text" id="chat-input-text"></span>
+            <span class="cib-send" id="chat-send-btn">➤</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="feat-divider">
+
+  <!-- 5. SCAN TEXTBOOK -->
+  <section class="feat-section reverse" id="feat-scan">
+    <div class="feat-text">
+      <p class="kicker" data-i18n="scan.kicker">SCAN TEXTBOOK</p>
+      <h2 data-i18n="scan.title">Scan your textbook,<br>learn every character</h2>
+      <p data-i18n="scan.desc">Take a photo or paste text from your Chinese textbook. Every character is broken into a grid with pinyin — tap any one to see its full detail, stroke order, and audio.</p>
+    </div>
+    <div class="phone">
+      <div class="phone-notch" aria-hidden="true"></div>
+      <div class="phone-inner">
+        <div class="scan-content">
+          <div class="scan-grid">
+            <div class="scan-char sc-active" data-char="朱" style="animation-delay:0.3s"><div class="sc-hz" id="sc-hz-0"></div><span class="sc-py">zhū</span></div>
+            <div class="scan-char" data-char="云" style="animation-delay:0.4s"><div class="sc-hz" id="sc-hz-1"></div><span class="sc-py">yún</span></div>
+            <div class="scan-char" data-char="这" style="animation-delay:0.5s"><div class="sc-hz" id="sc-hz-2"></div><span class="sc-py">zhè</span></div>
+            <div class="scan-char" data-char="学" style="animation-delay:0.6s"><div class="sc-hz" id="sc-hz-3"></div><span class="sc-py">xué</span></div>
+            <div class="scan-char" data-char="期" style="animation-delay:0.7s"><div class="sc-hz" id="sc-hz-4"></div><span class="sc-py">qī</span></div>
+            <div class="scan-char" data-char="不" style="animation-delay:0.8s"><div class="sc-hz" id="sc-hz-5"></div><span class="sc-py">bù</span></div>
+            <div class="scan-char" data-char="太" style="animation-delay:0.9s"><div class="sc-hz" id="sc-hz-6"></div><span class="sc-py">tài</span></div>
+            <div class="scan-char" data-char="忙" style="animation-delay:1.0s"><div class="sc-hz" id="sc-hz-7"></div><span class="sc-py">máng</span></div>
+            <div class="scan-char" data-char="她" style="animation-delay:1.1s"><div class="sc-hz" id="sc-hz-8"></div><span class="sc-py">tā</span></div>
+            <div class="scan-char" data-char="想" style="animation-delay:1.2s"><div class="sc-hz" id="sc-hz-9"></div><span class="sc-py">xiǎng</span></div>
+            <div class="scan-char" data-char="打" style="animation-delay:1.3s"><div class="sc-hz" id="sc-hz-10"></div><span class="sc-py">dǎ</span></div>
+            <div class="scan-char" data-char="工" style="animation-delay:1.4s"><div class="sc-hz" id="sc-hz-11"></div><span class="sc-py">gōng</span></div>
+            <div class="scan-char" data-char="挣" style="animation-delay:1.5s"><div class="sc-hz" id="sc-hz-12"></div><span class="sc-py">zhèng</span></div>
+            <div class="scan-char" data-char="点" style="animation-delay:1.6s"><div class="sc-hz" id="sc-hz-13"></div><span class="sc-py">diǎn</span></div>
+            <div class="scan-char" data-char="儿" style="animation-delay:1.7s"><div class="sc-hz" id="sc-hz-14"></div><span class="sc-py">er</span></div>
+            <div class="scan-char" data-char="钱" style="animation-delay:1.8s"><div class="sc-hz" id="sc-hz-15"></div><span class="sc-py">qián</span></div>
+            <div class="scan-char" data-char="林" style="animation-delay:1.9s"><div class="sc-hz" id="sc-hz-16"></div><span class="sc-py">lín</span></div>
+            <div class="scan-char" data-char="娜" style="animation-delay:2.0s"><div class="sc-hz" id="sc-hz-17"></div><span class="sc-py">nà</span></div>
+            <div class="scan-char" data-char="告" style="animation-delay:2.1s"><div class="sc-hz" id="sc-hz-18"></div><span class="sc-py">gào</span></div>
+            <div class="scan-char" data-char="诉" style="animation-delay:2.2s"><div class="sc-hz" id="sc-hz-19"></div><span class="sc-py">sù</span></div>
+            <div class="scan-char" data-char="朋" style="animation-delay:2.3s"><div class="sc-hz" id="sc-hz-20"></div><span class="sc-py">péng</span></div>
+            <div class="scan-char" data-char="友" style="animation-delay:2.4s"><div class="sc-hz" id="sc-hz-21"></div><span class="sc-py">yǒu</span></div>
+            <div class="scan-char" data-char="汉" style="animation-delay:2.5s"><div class="sc-hz" id="sc-hz-22"></div><span class="sc-py">hàn</span></div>
+            <div class="scan-char" data-char="思" style="animation-delay:2.6s"><div class="sc-hz" id="sc-hz-23"></div><span class="sc-py">sī</span></div>
+            <div class="scan-char" data-char="要" style="animation-delay:2.7s"><div class="sc-hz" id="sc-hz-24"></div><span class="sc-py">yào</span></div>
+            <div class="scan-char" data-char="找" style="animation-delay:2.8s"><div class="sc-hz" id="sc-hz-25"></div><span class="sc-py">zhǎo</span></div>
+            <div class="scan-char" data-char="一" style="animation-delay:2.9s"><div class="sc-hz" id="sc-hz-26"></div><span class="sc-py">yī</span></div>
+            <div class="scan-char" data-char="个" style="animation-delay:3.0s"><div class="sc-hz" id="sc-hz-27"></div><span class="sc-py">gè</span></div>
+            <div class="scan-char" data-char="语" style="animation-delay:3.1s"><div class="sc-hz" id="sc-hz-28"></div><span class="sc-py">yǔ</span></div>
+            <div class="scan-char" data-char="老" style="animation-delay:3.2s"><div class="sc-hz" id="sc-hz-29"></div><span class="sc-py">lǎo</span></div>
+            <div class="scan-char" data-char="师" style="animation-delay:3.3s"><div class="sc-hz" id="sc-hz-30"></div><span class="sc-py">shī</span></div>
+          </div>
+          <div class="scan-grammar-card">
+            <span class="sgc-icon">✦</span>
+            <span class="sgc-title" data-i18n="scan.grammar">Grammar</span>
+            <div class="sgc-badges">
+              <span class="sgc-badge ai">✦13 AI</span>
+              <span class="sgc-badge hsk6">1 HSK6</span>
+              <span class="sgc-badge hsk5">2 HSK5</span>
+              <span class="sgc-more">+4</span>
+            </div>
+            <span class="sgc-arrow">⌃</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="feat-divider">
+
+  <!-- 5. GRAMMAR DETECTION -->
+  <section class="feat-section" id="feat-grammar">
+    <div class="feat-text">
+      <p class="kicker" data-i18n="grammar.kicker">GRAMMAR</p>
+      <h2 data-i18n="grammar.title">Understand sentence<br>structure instantly</h2>
+      <p data-i18n="grammar.desc">Paste any Chinese text and see grammar patterns highlighted automatically. Tap any highlight to learn the rule, HSK level, and usage examples in Vietnamese.</p>
+    </div>
+    <div class="phone">
+      <div class="phone-notch" aria-hidden="true"></div>
+      <div class="phone-inner" style="background:#fff">
+        <div class="grammar-content">
+          <div class="grammar-filters">
+            <span data-i18n="grammar.filter.all">Tất cả 12</span>
+            <span class="gf-ai">✦ AI 3</span>
+            <span>HSK4 3</span>
+            <span>HSK2 2</span>
+          </div>
+          <div class="grammar-text">
+            朱云这学期不太忙，<span class="gh">她想打工挣点儿钱</span>。林娜告诉朱云，她的朋友汉思要找一个汉语老师。汉思是德国人，他在北京大学学习中文，但是他觉得自己的口语不太好，<span class="gh">想找一个中国人帮他练习</span>。朱云觉得这个工作很合适，她决定去试试。
+          </div>
+        </div>
+        <div class="grammar-sheet">
+          <div class="gs-handle"></div>
+          <div class="gs-header">
+            <div class="gs-title" data-i18n="grammar.structure">Động từ 1 + (Tân ngữ) + Động từ 2 + (Tân ngữ)</div>
+            <span class="gs-hsk">HSK 4</span>
+          </div>
+          <div class="gs-ai-row">
+            <span class="gs-ai-badge">✦ AI</span>
+            <span class="gs-ai-label" data-i18n="grammar.ai.label">Detected by AI</span>
+          </div>
+          <div class="gs-label" data-i18n="grammar.label.desc">MÔ TẢ</div>
+          <div class="gs-desc" data-i18n="grammar.sheet.desc">Cấu trúc chuỗi động từ, trong đó hai hoặc nhiều động từ được sử dụng liên tiếp để diễn tả một chuỗi hành động.</div>
+          <div class="gs-label" data-i18n="grammar.label.ex">VÍ DỤ</div>
+          <div class="gs-example">
+            <div class="gse-cn">• 她想打工挣点儿钱。</div>
+            <div class="gse-py">tā xiǎng dǎ gōng zhèng diǎn ér qián。</div>
+            <div class="gse-vi" data-i18n="grammar.ex.vi">Cô ấy muốn đi làm thêm để kiếm một ít tiền.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats-section" aria-labelledby="stats-heading">
+    <h2 class="sr-only" id="stats-heading">App statistics</h2>
+    <div class="stats-grid">
+      <div class="stat-item"><div class="number" data-target="40000" data-suffix="+">0</div><div class="label" data-i18n="stats.words">Words</div></div>
+      <div class="stat-item"><div class="number" data-target="9" data-prefix="HSK 1–">0</div><div class="label" data-i18n="stats.levels">Levels</div></div>
+      <div class="stat-item"><div class="number" data-target="70" data-suffix="+">0</div><div class="label" data-i18n="stats.topics">Topics</div></div>
+      <div class="stat-item"><div class="number" data-display="EN + VI">—</div><div class="label" data-i18n="stats.languages">Languages</div></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2 data-i18n="cta.title">Start learning today</h2>
+    <p data-i18n="cta.desc">Free to use. 40,000+ words across HSK 1–9. No complicated setup — just pick your level and go.</p>
+    <a class="cta-badge" href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema" aria-label="Get Chifanlema on Google Play">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3.61 1.814L13.793 12 3.61 22.186a1.005 1.005 0 01-.61-.92V2.734c0-.39.228-.734.61-.92z" fill="#4285F4"/><path d="M17.091 8.703L5.12.87a1.005 1.005 0 00-1.51.944l10.183 10.183 3.298-3.294z" fill="#EA4335"/><path d="M3.61 22.186L13.793 12l3.298 3.297L5.12 23.13a1.005 1.005 0 01-1.51-.944z" fill="#34A853"/><path d="M21.39 12c0 .5-.27.96-.71 1.2l-3.59 2.1-3.297-3.3 3.298-3.297 3.59 2.097c.44.24.71.7.71 1.2z" fill="#FBBC04"/></svg>
+      <div class="badge-text"><span class="badge-label" data-i18n="cta.badge.label">Get it on</span><br><span class="badge-store">Google Play</span></div>
+    </a>
+  </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>&copy; 2026 Chifanlema</span>
+      <div class="links">
+        <a href="https://cqhung1412.github.io/chifanlema/privacy-policy.html" data-i18n="footer.privacy">Privacy</a>
+        <a href="https://cqhung1412.github.io/chifanlema/terms-of-service.html" data-i18n="footer.terms">Terms</a>
+        <a href="mailto:hungcq.chifanlema@gmail.com" data-i18n="footer.contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
   <script>
-    if (typeof navigator !== 'undefined' && navigator.modelContext) {
-      navigator.modelContext.provideContext({
-        tools: [{
-          name: "get-app-info",
-          description: "Get information about the Chifanlema Chinese vocabulary learning app",
-          inputSchema: { type: "object", properties: {}, additionalProperties: false },
-          execute: async () => ({
-            name: "Chifanlema (吃饭了吗)",
-            tagline: "Learn Chinese, one word at a time",
-            description: "A micro-learning app that teaches Mandarin Chinese vocabulary through a TikTok-style feed, AI-powered search, stroke order animations, and lock screen widgets.",
-            words: "25,000+",
-            levels: "HSK 1-6",
-            topics: 77,
-            languages: ["English", "Vietnamese"],
-            features: ["Word Feed", "AI Chat Search", "Stroke Order", "Native Pronunciation", "Lock Screen Widgets", "Collections", "Shareable Word Cards", "Voice Search"],
-            platforms: { android: "https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema" },
-            links: {
-              website: "https://cqhung1412.github.io/chifanlema/",
-              privacy: "https://cqhung1412.github.io/chifanlema/privacy-policy.html",
-              terms: "https://cqhung1412.github.io/chifanlema/terms-of-service.html",
-              llms: "https://cqhung1412.github.io/chifanlema/llms.txt"
-            },
-            contact: "hungcq.chifanlema@gmail.com"
-          })
-        }]
+    // Intersection Observer for feature sections
+    const sections = document.querySelectorAll('.feat-section');
+    const secObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          secObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    sections.forEach(s => secObs.observe(s));
+
+    // Counter animation for stats
+    const statNums = document.querySelectorAll('.stat-item .number[data-target]');
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.target);
+          const suffix = el.dataset.suffix || '';
+          const prefix = el.dataset.prefix || '';
+          const duration = 1800;
+          const start = performance.now();
+          const tick = (now) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = prefix + Math.floor(eased * target).toLocaleString() + suffix;
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          statObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+    statNums.forEach(n => statObserver.observe(n));
+
+    // Language stat (no counter, just reveal)
+    const langStat = document.querySelector('.number[data-display]');
+    if (langStat) {
+      const langObs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            langStat.textContent = langStat.dataset.display;
+            langObs.unobserve(langStat);
+          }
+        });
+      }, { threshold: 0.5 });
+      langObs.observe(langStat);
+    }
+
+    // Scan char pop animation restarts handled by new HanziWriter observer below
+
+    // Restart chat animations when visible
+    const chatSection = document.getElementById('feat-chat');
+    if (chatSection) {
+      var chatStarted = false;
+      var chatObs = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting && !chatStarted) {
+          chatStarted = true;
+          chatObs.unobserve(chatSection);
+          runChatAnimation();
+        }
+      }, { threshold: 0.3 });
+      chatObs.observe(chatSection);
+    }
+
+    var chatTexts = {
+      en: { query: 'Recent Chinese Gen Z slang', ai: 'Here are some popular Chinese Gen Z slang terms with brief explanations:\n\n- <strong>yyds</strong> (永远的神 / yǒngyuǎn de shén) – "eternal god", used to praise someone outstanding.\n- <strong>awsl</strong> (啊我死了 / ā wǒ sǐ le) – "I\'m dead", expressing something is too cute.\n- <strong>xswl</strong> (笑死我了 / xiào sǐ wǒ le) – "laughing to death".\n- <strong>u1s1</strong> (有一说一 / yǒu yī shuō yī) – "to be honest...", used when speaking frankly.' },
+      vi: { query: 'Tiếng lóng của Gen Z Trung Quốc gần đây', ai: 'Dưới đây là một số tiếng lóng phổ biến của Gen Z Trung Quốc gần đây, kèm giải thích ngắn gọn:\n\n- <strong>yyds</strong> (永远的神 / yǒngyuǎn de shén) – "thần thánh vĩnh cửu", dùng để khen ai đó xuất sắc.\n- <strong>awsl</strong> (啊我死了 / ā wǒ sǐ le) – "a tôi chết mất", thể hiện cảm xúc quá dễ thương.\n- <strong>xswl</strong> (笑死我了 / xiào sǐ wǒ le) – "cười chết mất".\n- <strong>u1s1</strong> (有一说一 / yǒu yī shuō yī) – "nói thật thì...", dùng khi muốn nói thẳng.' }
+    };
+    function runChatAnimation() {
+      var inputText = document.getElementById('chat-input-text');
+      var userMsg = document.getElementById('chat-user-msg');
+      var thinking = document.getElementById('chat-thinking');
+      var aiMsg = document.getElementById('chat-ai-msg');
+      var sendBtn = document.getElementById('chat-send-btn');
+      var chatMsgs = document.getElementById('chat-msgs');
+      var query = chatTexts[currentLang].query;
+      var aiContent = chatTexts[currentLang].ai;
+      var i = 0;
+
+
+
+      function typeInput() {
+        if (i <= query.length) {
+          inputText.textContent = query.slice(0, i);
+          if (i > 0) sendBtn.classList.add('active');
+          i++;
+          setTimeout(typeInput, 45);
+        } else {
+          setTimeout(function() {
+            inputText.textContent = '';
+            sendBtn.classList.remove('active');
+            userMsg.classList.add('visible');
+
+            setTimeout(function() {
+              thinking.classList.add('visible');
+  
+              setTimeout(function() {
+                thinking.classList.remove('visible');
+                thinking.style.display = 'none';
+                aiMsg.classList.add('visible');
+                typeAI(aiContent, 0);
+              }, 1500);
+            }, 400);
+          }, 300);
+        }
+      }
+
+      function typeAI(text, pos) {
+        if (pos <= text.length) {
+          if (text[pos] === '<') {
+            var closeIdx = text.indexOf('>', pos);
+            if (closeIdx > -1) {
+              aiMsg.innerHTML = text.slice(0, closeIdx + 1).replace(/\n/g, '<br>');
+  
+              setTimeout(function() { typeAI(text, closeIdx + 1); }, 5);
+              return;
+            }
+          }
+          aiMsg.innerHTML = text.slice(0, pos).replace(/\n/g, '<br>');
+          var delay = text[pos] === '\n' ? 80 : (text[pos] === '–' || text[pos] === '.' ? 60 : 15);
+          setTimeout(function() { typeAI(text, pos + 1); }, delay);
+        } else {
+          // AI done — show word cards, examples, suggestions
+          showResults();
+        }
+      }
+
+      function showResults() {
+        var items = ['cw1','cw2','cw3','ce1','ce2','ce3','chat-suggest'];
+        var delay = 400;
+        items.forEach(function(id, idx) {
+          setTimeout(function() {
+            var el = document.getElementById(id);
+            if (el) { el.classList.add('visible'); }
+          }, delay * (idx + 1));
+        });
+      }
+
+      typeInput();
+    }
+
+    // Restart grammar sheet animation when visible
+    const grammarSection = document.getElementById('feat-grammar');
+    if (grammarSection) {
+      const gramObs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const sheet = grammarSection.querySelector('.grammar-sheet');
+            if (sheet) {
+              sheet.style.animation = 'none';
+              sheet.offsetHeight;
+              sheet.style.animation = '';
+            }
+            gramObs.unobserve(grammarSection);
+          }
+        });
+      }, { threshold: 0.3 });
+      gramObs.observe(grammarSection);
+    }
+
+    // Play audio — multiple fallback strategies
+    window.playAudio = function(text, zhText) {
+      var word = zhText || text;
+      // Strategy 1: Audio element with Google TTS
+      try {
+        var a = new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=zh-CN&q=' + encodeURIComponent(word));
+        a.volume = 1;
+        a.play().catch(function() {
+          // Strategy 2: speechSynthesis
+          try {
+            if (window.speechSynthesis) {
+              window.speechSynthesis.cancel();
+              var u = new SpeechSynthesisUtterance(word);
+              u.lang = 'zh-CN';
+              u.rate = 0.8;
+              window.speechSynthesis.speak(u);
+            }
+          } catch(e2) {}
+        });
+      } catch(e) {
+        try {
+          if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            var u2 = new SpeechSynthesisUtterance(word);
+            u2.lang = 'zh-CN';
+            u2.rate = 0.8;
+            window.speechSynthesis.speak(u2);
+          }
+        } catch(e3) {}
+      }
+    };
+    // Event delegation for audio buttons
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-audio]');
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Visual feedback — pulse animation
+        btn.style.transform = 'scale(0.9)';
+        btn.style.opacity = '0.5';
+        setTimeout(function() { btn.style.transform = ''; btn.style.opacity = ''; }, 250);
+        window.playAudio(btn.dataset.audio, btn.dataset.zh || btn.dataset.audio);
+      }
+    });
+
+    // HanziWriter — looping stroke animation
+    var hanziData = {
+      '家': { strokes: 10, radical: '宀', parts: '冖 宀 豕', measure: '个' },
+      '庭': { strokes: 9, radical: '广', parts: '广 廴 壬', measure: '个' }
+    };
+    var hwWriter = null;
+    function initHanzi(char) {
+      var target = document.getElementById('hanzi-target');
+      if (!target || typeof HanziWriter === 'undefined') return;
+      target.innerHTML = '';
+      hwWriter = HanziWriter.create('hanzi-target', char, {
+        width: 90, height: 90, padding: 4,
+        strokeAnimationSpeed: 1.2,
+        delayBetweenStrokes: 80,
+        strokeColor: '#333',
+        radicalColor: '#4a7dbd',
+        showOutline: true,
+        drawingColor: '#b44',
+      });
+      hwWriter.loopCharacterAnimation();
+      // Update info
+      var info = hanziData[char];
+      if (info) {
+        var lang = currentLang || 'vi';
+        var lblStrokes = lang === 'en' ? 'STROKES' : 'NÉT';
+        var lblRadical = lang === 'en' ? 'RADICAL' : 'BỘ THỦ';
+        var lblParts = lang === 'en' ? 'COMPONENTS' : 'BỘ PHẬN';
+        var lblMeasure = lang === 'en' ? 'MEASURE' : 'LƯỢNG TỪ';
+        document.getElementById('stroke-info').innerHTML =
+          '<div class="dsi-row"><span><span class="dsi-val">' + info.strokes + '</span><br><span data-i18n="detail.strokes">' + lblStrokes + '</span></span><span><span class="dsi-val">' + info.radical + '</span><br><span data-i18n="detail.radical">' + lblRadical + '</span></span></div>' +
+          '<div><span style="font-size:10px;color:oklch(35% 0.01 250)">' + info.parts + '</span><br><span data-i18n="detail.parts">' + lblParts + '</span></div>' +
+          '<div><span class="dsi-val">' + info.measure + '</span><br><span data-i18n="detail.measure">' + lblMeasure + '</span></div>';
+      }
+    }
+    // Tab switching
+    var detailTabs = document.getElementById('detail-tabs');
+    if (detailTabs) {
+      detailTabs.addEventListener('click', function(e) {
+        var span = e.target.closest('span[data-char]');
+        if (!span) return;
+        detailTabs.querySelectorAll('span').forEach(function(s) { s.classList.remove('active'); });
+        span.classList.add('active');
+        initHanzi(span.dataset.char);
       });
     }
+    // Init first char when section scrolls into view
+    var detailObs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting && !hwWriter) initHanzi('家');
+    }, { threshold: 0.3 });
+    var featDetail = document.getElementById('feat-detail');
+    if (featDetail) detailObs.observe(featDetail);
+
+    // ===== SCAN HANZIWRITER =====
+    var scanWriters = [];
+    var scanActiveIdx = 0;
+    var scanChars = document.querySelectorAll('#feat-scan .scan-char');
+    var scanInited = false;
+
+    function initScanWriters() {
+      if (scanInited || typeof HanziWriter === 'undefined') return;
+      scanInited = true;
+      scanChars.forEach(function(el, i) {
+        var char = el.dataset.char;
+        var target = document.getElementById('sc-hz-' + i);
+        if (!target || !char) return;
+        var w = HanziWriter.create(target, char, {
+          width: 32, height: 32,
+          padding: 1,
+          strokeAnimationSpeed: 1.5,
+          delayBetweenStrokes: 80,
+          strokeColor: '#333',
+          radicalColor: '#333',
+          showOutline: true,
+          showCharacter: true
+        });
+        scanWriters.push(w);
+      });
+      // Animate first character and loop it
+      if (scanWriters[0]) loopScanChar(0);
+    }
+
+    function loopScanChar(idx) {
+      scanActiveIdx = idx;
+      scanChars.forEach(function(el, i) { el.classList.toggle('sc-active', i === idx); });
+      scanWriters[idx].hideCharacter();
+      scanWriters[idx].animateCharacter({
+        onComplete: function() {
+          setTimeout(function() {
+            if (scanActiveIdx === idx) loopScanChar(idx);
+          }, 1500);
+        }
+      });
+    }
+
+    // Click to play animation on any character
+    scanChars.forEach(function(el, i) {
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', el.dataset.char);
+      el.addEventListener('click', function() {
+        if (!scanWriters[i]) return;
+        scanActiveIdx = i;
+        scanChars.forEach(function(e, j) { e.classList.toggle('sc-active', j === i); });
+        scanWriters[i].hideCharacter();
+        scanWriters[i].animateCharacter();
+      });
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+      });
+    });
+
+    var scanObs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting) initScanWriters();
+    }, { threshold: 0.3 });
+    var featScan = document.getElementById('feat-scan');
+    if (featScan) scanObs.observe(featScan);
+
+    // ===== I18N =====
+    var i18n = {
+      en: {
+        'hero.tagline': 'Learn Chinese, one word at a time.',
+        'hero.sub': 'A vocabulary app with 40,000+ words, AI chat, grammar detection, stroke animations, and a feed that makes learning feel like scrolling.',
+        'hero.cta': 'Download on Google Play',
+        'feed.kicker': 'WORD FEED',
+        'feed.title': 'Scroll through vocabulary<br>like a social feed',
+        'feed.desc': 'Swipe through full-screen word cards. Each card shows the character, pinyin, and definition. Tap for detailed breakdowns. Set a daily goal of 5–30 words.',
+        'feed.def.1': '(n.) Family; home; household',
+        'feed.def.2': '(n.) Parents; father and mother',
+        'feed.def.3': '(n.) Brothers; male siblings',
+        'feed.def.4': '(n.) Sisters; female siblings',
+        'feed.def.5': '(n.) Grandfather; paternal grandfather',
+        'feed.def.6': '(n.) Marriage; matrimony',
+        'feed.def.7': '(v.) To raise; to bring up; to nurture',
+        'feed.def.8': '(adj.) Filial; obedient to parents',
+        'detail.kicker': 'WORD DETAIL',
+        'detail.title': 'Every character,<br>fully decomposed',
+        'detail.desc': 'Tap any word to see pinyin, definitions, HSK level, topic tags, stroke count, radical, components, and example sentences with Vietnamese translations.',
+        'detail.def': 'family; home; household',
+        'detail.tag.1': 'Noun',
+        'detail.tag.3': 'Family',
+        'detail.tag.4': 'Daily Life',
+        'detail.strokes': 'STROKES',
+        'detail.radical': 'RADICAL',
+        'detail.parts': 'COMPONENTS',
+        'detail.measure': 'MEASURE',
+        'detail.examples': 'Examples',
+        'detail.ex.vi.1': 'My family has five people.',
+        'detail.ex.vi.2': 'She comes from a happy family.',
+        'detail.ex.vi.3': 'Family is the most important thing.',
+        'detail.collocations': 'Collocations',
+        'chat.kicker': 'AI CHAT',
+        'chat.title': 'Ask anything about<br>Chinese language',
+        'chat.desc': 'Type in English, Vietnamese, or Chinese. Get AI-powered responses with word breakdowns, pronunciation, examples, and follow-up suggestions.',
+        'chat.user.msg': 'Recent Chinese Gen Z slang',
+        'chat.word.1': 'forever, eternally',
+        'chat.word.2': 'LOL, dying of laughter',
+        'chat.word.3': 'emotionally hit, touched',
+        'chat.ex.1': 'This song is legendary forever!',
+        'chat.ex.2': 'His expression made me die laughing.',
+        'chat.ex.3': 'After watching this video I was truly moved.',
+        'chat.sug.1': 'Any more slang?',
+        'chat.sug.2': 'Give examples with "破防"',
+        'chat.sug.3': 'More natural translations',
+        'scan.kicker': 'SCAN TEXTBOOK',
+        'scan.title': 'Scan your textbook,<br>learn every character',
+        'scan.desc': 'Take a photo or paste text from your Chinese textbook. Every character is broken into a grid with pinyin — tap any one to see its full detail, stroke order, and audio.',
+        'scan.grammar': 'Grammar',
+        'grammar.kicker': 'GRAMMAR',
+        'grammar.title': 'Understand sentence<br>structure instantly',
+        'grammar.desc': 'Paste any Chinese text and see grammar patterns highlighted automatically. Tap any highlight to learn the rule, HSK level, and usage examples in Vietnamese.',
+        'grammar.filter.all': 'All 12',
+        'grammar.structure': 'Verb 1 + (Object) + Verb 2 + (Object)',
+        'grammar.ai.label': 'Detected by AI',
+        'grammar.label.desc': 'DESCRIPTION',
+        'grammar.sheet.desc': 'Serial verb construction where two or more verbs are used consecutively to express a sequence of actions.',
+        'grammar.label.ex': 'EXAMPLE',
+        'grammar.ex.vi': 'She wants to get a part-time job to earn some money.',
+        'stats.words': 'Words',
+        'stats.levels': 'Levels',
+        'stats.topics': 'Topics',
+        'stats.languages': 'Languages',
+        'cta.title': 'Start learning today',
+        'cta.desc': 'Free to use. 40,000+ words across HSK 1–9. No complicated setup — just pick your level and go.',
+        'cta.badge.label': 'Get it on',
+        'footer.privacy': 'Privacy',
+        'footer.terms': 'Terms',
+        'footer.contact': 'Contact'
+      },
+      vi: {
+        'hero.tagline': 'Học tiếng Trung, mỗi ngày một từ.',
+        'hero.sub': 'Ứng dụng từ vựng với 40.000+ từ, trò chuyện AI, phát hiện ngữ pháp, hoạt ảnh nét bút, và bảng tin khiến việc học như đang lướt mạng.',
+        'hero.cta': 'Tải trên Google Play',
+        'feed.kicker': 'BẢNG TIN TỪ VỰNG',
+        'feed.title': 'Lướt từ vựng<br>như mạng xã hội',
+        'feed.desc': 'Vuốt qua thẻ từ toàn màn hình. Mỗi thẻ hiển thị chữ Hán, phiên âm và nghĩa. Nhấn để xem chi tiết. Đặt mục tiêu 5–30 từ mỗi ngày.',
+        'feed.def.1': '(n.) Gia đình; mái nhà; tổ ấm; mái ấm',
+        'feed.def.2': '(n.) Cha mẹ; phụ mẫu; ba má',
+        'feed.def.3': '(n.) Anh em trai; huynh đệ',
+        'feed.def.4': '(n.) Chị em gái; tỷ muội',
+        'feed.def.5': '(n.) Ông nội; ông ngoại',
+        'feed.def.6': '(n.) Hôn nhân; cuộc sống vợ chồng',
+        'feed.def.7': '(v.) Nuôi dưỡng; nuôi nấng; chăm sóc',
+        'feed.def.8': '(adj.) Hiếu thảo; nghe lời cha mẹ',
+        'detail.kicker': 'CHI TIẾT TỪ',
+        'detail.title': 'Mỗi ký tự,<br>phân tích trọn vẹn',
+        'detail.desc': 'Nhấn vào từ bất kỳ để xem phiên âm, nghĩa, cấp HSK, chủ đề, số nét, bộ thủ, bộ phận, và câu ví dụ với bản dịch tiếng Việt.',
+        'detail.def': 'gia đình; mái nhà; tổ ấm; mái ấm',
+        'detail.tag.1': 'Danh từ',
+        'detail.tag.3': 'Gia đình',
+        'detail.tag.4': 'Cuộc sống',
+        'detail.strokes': 'NÉT',
+        'detail.radical': 'BỘ THỦ',
+        'detail.parts': 'BỘ PHẬN',
+        'detail.measure': 'LƯỢNG TỪ',
+        'detail.examples': 'Ví dụ',
+        'detail.ex.vi.1': 'Gia đình tôi có năm người.',
+        'detail.ex.vi.2': 'Cô ấy đến từ một gia đình hạnh phúc.',
+        'detail.ex.vi.3': 'Gia đình là quan trọng nhất.',
+        'detail.collocations': 'Từ ghép',
+        'chat.kicker': 'TRÒ CHUYỆN AI',
+        'chat.title': 'Hỏi bất kỳ điều gì<br>về tiếng Trung',
+        'chat.desc': 'Nhập bằng tiếng Anh, tiếng Việt, hoặc tiếng Trung. Nhận phản hồi AI với phân tích từ, phát âm, ví dụ, và gợi ý câu hỏi tiếp theo.',
+        'chat.user.msg': 'Tiếng lóng của Gen Z Trung Quốc gần đây',
+        'chat.word.1': 'mãi mãi, vĩnh viễn',
+        'chat.word.2': 'cười chết, buồn cười quá',
+        'chat.word.3': 'mất phòng thủ, bị chạm đến',
+        'chat.ex.1': 'Bài hát này thần thánh vĩnh cửu!',
+        'chat.ex.2': 'Biểu cảm của anh ấy cười chết mất.',
+        'chat.ex.3': 'Xem xong video này tôi bị chạm đến thật sự.',
+        'chat.sug.1': 'Còn từ lóng nào nữa?',
+        'chat.sug.2': 'Cho ví dụ với "破防"',
+        'chat.sug.3': 'Dịch sang tiếng Việt tự nhiên hơn',
+        'scan.kicker': 'QUÉT SÁCH GIÁO KHOA',
+        'scan.title': 'Quét sách giáo khoa,<br>học từng ký tự',
+        'scan.desc': 'Chụp ảnh hoặc dán đoạn văn từ sách giáo khoa. Mỗi ký tự được tách thành ô riêng với phiên âm — nhấn để xem chi tiết, thứ tự nét, và phát âm.',
+        'scan.grammar': 'Ngữ pháp',
+        'grammar.kicker': 'NGỮ PHÁP',
+        'grammar.title': 'Hiểu cấu trúc câu<br>trong tích tắc',
+        'grammar.desc': 'Dán đoạn văn tiếng Trung và xem các mẫu ngữ pháp được tô sáng tự động. Nhấn vào phần tô sáng để học quy tắc, cấp HSK, và ví dụ sử dụng.',
+        'grammar.filter.all': 'Tất cả 12',
+        'grammar.structure': 'Động từ 1 + (Tân ngữ) + Động từ 2 + (Tân ngữ)',
+        'grammar.ai.label': 'Phát hiện bởi AI',
+        'grammar.label.desc': 'MÔ TẢ',
+        'grammar.sheet.desc': 'Cấu trúc chuỗi động từ, trong đó hai hoặc nhiều động từ được sử dụng liên tiếp để diễn tả một chuỗi hành động.',
+        'grammar.label.ex': 'VÍ DỤ',
+        'grammar.ex.vi': 'Cô ấy muốn đi làm thêm để kiếm một ít tiền.',
+        'stats.words': 'Từ vựng',
+        'stats.levels': 'Cấp độ',
+        'stats.topics': 'Chủ đề',
+        'stats.languages': 'Ngôn ngữ',
+        'cta.title': 'Bắt đầu học ngay hôm nay',
+        'cta.desc': 'Miễn phí sử dụng. 40.000+ từ vựng HSK 1–9. Không cần thiết lập phức tạp — chọn cấp độ và bắt đầu.',
+        'cta.badge.label': 'Tải về trên',
+        'footer.privacy': 'Quyền riêng tư',
+        'footer.terms': 'Điều khoản',
+        'footer.contact': 'Liên hệ'
+      }
+    };
+
+    var currentLang = 'en';
+    function setLang(lang) {
+      currentLang = lang;
+      var strings = i18n[lang];
+      document.querySelectorAll('[data-i18n]').forEach(function(el) {
+        var key = el.dataset.i18n;
+        if (strings[key]) el.innerHTML = strings[key];
+      });
+      document.querySelectorAll('#lang-toggle button').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+        btn.setAttribute('aria-pressed', btn.dataset.lang === lang ? 'true' : 'false');
+      });
+      document.documentElement.lang = lang;
+      // Reset chat animation with new language
+      if (typeof chatTexts !== 'undefined') {
+        var aiMsg = document.getElementById('chat-ai-msg');
+        var userMsg = document.getElementById('chat-user-msg');
+        if (aiMsg && aiMsg.classList.contains('visible')) {
+          aiMsg.innerHTML = chatTexts[lang].ai.replace(/\n/g, '<br>');
+        }
+        if (userMsg) userMsg.innerHTML = chatTexts[lang].query;
+      }
+    }
+    document.getElementById('lang-toggle').addEventListener('click', function(e) {
+      var btn = e.target.closest('button[data-lang]');
+      if (btn) {
+        setLang(btn.dataset.lang);
+        var announce = document.getElementById('lang-announce');
+        if (announce) announce.textContent = btn.dataset.lang === 'en' ? 'Language changed to English' : 'Đã chuyển sang tiếng Việt';
+      }
+    });
+    // Detect language: ?hl= param > browser language > default English
+    var urlParams = new URLSearchParams(window.location.search);
+    var hlParam = urlParams.get('hl');
+    if (hlParam && i18n[hlParam]) {
+      setLang(hlParam);
+    } else {
+      var browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+      if (browserLang.startsWith('vi')) {
+        setLang('vi');
+      } else {
+        setLang('en');
+      }
+    }
   </script>
-
 </body>
-
 </html>
