@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chifanlema — Open Word</title>
+  <script>
+    var params = new URLSearchParams(window.location.search);
+    var id = params.get('id');
+    var pkg = 'com.bigcitybear.chifanlema';
+    var playStore = 'https://play.google.com/store/apps/details?id=' + pkg;
+
+    if (id && /^\d+$/.test(id)) {
+      var scheme = 'chifanlema://word/' + id;
+      // Android Chrome: intent:// with Play Store fallback
+      var intent = 'intent://word/' + id + '#Intent;scheme=chifanlema;package=' + pkg +
+        ';S.browser_fallback_url=' + encodeURIComponent(playStore) + ';end';
+
+      if (/android/i.test(navigator.userAgent)) {
+        window.location.replace(intent);
+      } else {
+        // iOS/desktop: try custom scheme, fall back to Play Store
+        window.location.replace(scheme);
+        setTimeout(function () { window.location.replace(playStore); }, 1500);
+      }
+    } else {
+      window.location.replace(playStore);
+    }
+  </script>
+</head>
+
+<body style="font-family:system-ui;text-align:center;padding:3rem">
+  <p>Opening Chifanlema...</p>
+  <p><a href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema">Download on Google Play</a></p>
+</body>
+
+</html>
