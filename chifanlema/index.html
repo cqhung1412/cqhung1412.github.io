@@ -1078,6 +1078,12 @@
       margin-right: auto;
       line-height: 1.7;
     }
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
     .cta-badge {
       display: inline-flex;
       align-items: center;
@@ -1090,6 +1096,7 @@
       transition: opacity 0.2s;
     }
     .cta-badge:hover { opacity: 0.85; }
+    .cta-badge.discord { background: #5865F2; }
     .cta-badge .badge-text { text-align: left; line-height: 1.2; }
     .cta-badge .badge-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; }
     .cta-badge .badge-store { font-size: 17px; font-weight: 600; }
@@ -1468,10 +1475,16 @@
   <section class="cta-section">
     <h2 data-i18n="cta.title">Start learning today</h2>
     <p data-i18n="cta.desc">Free to use. 40,000+ words across HSK 1–9. No complicated setup — just pick your level and go.</p>
-    <a class="cta-badge" href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema" aria-label="Get Chifanlema on Google Play">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3.61 1.814L13.793 12 3.61 22.186a1.005 1.005 0 01-.61-.92V2.734c0-.39.228-.734.61-.92z" fill="#4285F4"/><path d="M17.091 8.703L5.12.87a1.005 1.005 0 00-1.51.944l10.183 10.183 3.298-3.294z" fill="#EA4335"/><path d="M3.61 22.186L13.793 12l3.298 3.297L5.12 23.13a1.005 1.005 0 01-1.51-.944z" fill="#34A853"/><path d="M21.39 12c0 .5-.27.96-.71 1.2l-3.59 2.1-3.297-3.3 3.298-3.297 3.59 2.097c.44.24.71.7.71 1.2z" fill="#FBBC04"/></svg>
-      <div class="badge-text"><span class="badge-label" data-i18n="cta.badge.label">Get it on</span><br><span class="badge-store">Google Play</span></div>
-    </a>
+    <div class="cta-buttons">
+      <a class="cta-badge" href="https://play.google.com/store/apps/details?id=com.bigcitybear.chifanlema" aria-label="Get Chifanlema on Google Play">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3.61 1.814L13.793 12 3.61 22.186a1.005 1.005 0 01-.61-.92V2.734c0-.39.228-.734.61-.92z" fill="#4285F4"/><path d="M17.091 8.703L5.12.87a1.005 1.005 0 00-1.51.944l10.183 10.183 3.298-3.294z" fill="#EA4335"/><path d="M3.61 22.186L13.793 12l3.298 3.297L5.12 23.13a1.005 1.005 0 01-1.51-.944z" fill="#34A853"/><path d="M21.39 12c0 .5-.27.96-.71 1.2l-3.59 2.1-3.297-3.3 3.298-3.297 3.59 2.097c.44.24.71.7.71 1.2z" fill="#FBBC04"/></svg>
+        <div class="badge-text"><span class="badge-label" data-i18n="cta.badge.label">Get it on</span><br><span class="badge-store">Google Play</span></div>
+      </a>
+      <a class="cta-badge discord" href="https://discord.gg/zwnj6Cd8AW" target="_blank" rel="noopener noreferrer" aria-label="Join Chifanlema Discord community">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        <div class="badge-text"><span class="badge-label" data-i18n="cta.discord.label">Join our</span><br><span class="badge-store">Discord</span></div>
+      </a>
+    </div>
   </section>
 
   </main>
@@ -1881,12 +1894,13 @@
         'cta.title': 'Start learning today',
         'cta.desc': 'Free to use. 40,000+ words across HSK 1–9. No complicated setup — just pick your level and go.',
         'cta.badge.label': 'Get it on',
+        'cta.discord.label': 'Join our',
         'footer.privacy': 'Privacy',
         'footer.terms': 'Terms',
         'footer.contact': 'Contact'
       },
       vi: {
-        'hero.tagline': 'Học tiếng Trung, mỗi ngày vài từ.',
+        'hero.tagline': 'Học tiếng Trung, mỗi ngày một từ.',
         'hero.sub': 'Ứng dụng từ vựng với 40.000+ từ, trò chuyện AI, phát hiện ngữ pháp, hoạt ảnh nét bút, và bảng tin khiến việc học như đang lướt mạng.',
         'hero.cta': 'Tải trên Google Play',
         'feed.kicker': 'BẢNG TIN TỪ VỰNG',
@@ -1950,6 +1964,7 @@
         'cta.title': 'Bắt đầu học ngay hôm nay',
         'cta.desc': 'Miễn phí sử dụng. 40.000+ từ vựng HSK 1–9. Không cần thiết lập phức tạp — chọn cấp độ và bắt đầu.',
         'cta.badge.label': 'Tải về trên',
+        'cta.discord.label': 'Tham gia',
         'footer.privacy': 'Quyền riêng tư',
         'footer.terms': 'Điều khoản',
         'footer.contact': 'Liên hệ'
